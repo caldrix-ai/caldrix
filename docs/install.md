@@ -58,6 +58,28 @@ computed with `sha256sum`, or `shasum -a 256` where that is missing (macOS); wit
 Each binary is copied beside its destination and renamed over it, so reinstalling while `caldrix` is
 running works.
 
+## Install with mise
+
+In a project managed by [mise](https://mise.jdx.dev), add caldrix to `mise.toml`:
+
+```toml
+[tools]
+"github:caldrix-ai/caldrix" = "latest"
+```
+
+or pin a release, such as `"0.1.1"`. `mise install` downloads this platform's release archive from GitHub
+and puts `caldrix` and `ld.lld` on the project's `PATH`; `mise lock` records each archive's checksum in
+`mise.lock`. mise does not run the installer's platform checks: on Linux below glibc 2.38, or a Mac below
+macOS 14.0, `caldrix` fails when it starts instead of being refused before the download.
+
+If the project already has a different `ld.lld` on its `PATH` that ours would shadow, expose only
+`caldrix`. It still finds its own `ld.lld` in mise's install directory:
+
+```toml
+[tools]
+"github:caldrix-ai/caldrix" = { version = "latest", filter_bins = "caldrix" }
+```
+
 ## Uninstall
 
 Remove the two binaries from the install directory:

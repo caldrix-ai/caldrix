@@ -11,6 +11,9 @@ changed is in the [changelog](https://github.com/caldrix-ai/caldrix/blob/main/CH
 curl -fsSL https://caldrix.ai/install.sh | sh
 ```
 
+With [mise](https://mise.jdx.dev): `"github:caldrix-ai/caldrix" = "latest"` under `[tools]` in `mise.toml`
+([install](docs/install.md#install-with-mise)).
+
 ## Start
 
 ```sh
