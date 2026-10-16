@@ -2,7 +2,7 @@
 
 One command installs `caldrix` and the linker it uses, `ld.lld`, into `~/.local/bin`, verifying both
 checksums before anything is written and never using `sudo`. The installer runs on Linux x86_64 with glibc
-2.38 or newer and on macOS on Apple silicon; the hardware each lane is supported on is listed in
+2.38 or newer and on macOS 14.0 or newer on Apple silicon; the hardware each lane is supported on is listed in
 [index.md](index.md#supported-hardware-and-models).
 
 ## Install
@@ -15,7 +15,7 @@ The script asks GitHub for the latest release of `caldrix-ai/caldrix`, downloads
 platform, verifies it, installs the two binaries, then runs `caldrix doctor` so you see which lanes this
 machine can use ([doctor.md](doctor.md)). Releases and their notes are at
 [github.com/caldrix-ai/caldrix/releases](https://github.com/caldrix-ai/caldrix/releases); the macOS
-archive is not published yet.
+archive is published from v0.1.1.
 
 The whole script is inside one function called on its last line, so a download cut short runs nothing.
 
@@ -41,7 +41,8 @@ takes no other option. When the directory is not on your `PATH`, the script prin
 Any other platform is refused by name. On Linux the script reads the glibc version from `ldd --version`
 and refuses a host below 2.38, or a host whose `ldd` reports no glibc (musl, for example). The refusal
 names the container route instead: images `ghcr.io/caldrix-ai/caldrix:latest-rocm6.4` (AMD) and
-`ghcr.io/caldrix-ai/caldrix:latest-cpu`. Those images are not published yet.
+`ghcr.io/caldrix-ai/caldrix:latest-cpu`. Those images are not published yet. On macOS the script reads
+`sw_vers -productVersion` and refuses a Mac below macOS 14.0 before downloading anything.
 
 ## What is checked
 
