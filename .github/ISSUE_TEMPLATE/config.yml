@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/caldrix-ai/caldrix/tree/main/docs
+    about: Install, run, serve, the HTTP API and troubleshooting.
+  - name: Security vulnerability
+    url: https://github.com/caldrix-ai/caldrix/blob/main/SECURITY.md
+    about: Report privately to security@caldrix.ai, never in a public issue.
+  - name: Commercial licensing
+    url: https://caldrix.ai/terms
+    about: Production and commercial use need a license -- licensing@caldrix.ai.
