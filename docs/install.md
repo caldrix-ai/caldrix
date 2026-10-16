@@ -13,8 +13,9 @@ curl -fsSL https://caldrix.ai/install.sh | sh
 
 The script asks GitHub for the latest release of `caldrix-ai/caldrix`, downloads the archive for this
 platform, verifies it, installs the two binaries, then runs `caldrix doctor` so you see which lanes this
-machine can use ([doctor.md](doctor.md)). The first release is not published yet; until it is, there is no
-release for the script to install.
+machine can use ([doctor.md](doctor.md)). Releases and their notes are at
+[github.com/caldrix-ai/caldrix/releases](https://github.com/caldrix-ai/caldrix/releases); the macOS
+archive is not published yet.
 
 The whole script is inside one function called on its last line, so a download cut short runs nothing.
 

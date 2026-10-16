@@ -2,7 +2,8 @@
 
 caldrix runs and serves language models with the Inferno compiler. It is one binary: `caldrix run` chats with a model in your terminal, `caldrix serve` starts an OpenAI-compatible HTTP server, and `caldrix doctor` tells you what your machine can run.
 
-These docs track the main branch. The first release is not published yet.
+These docs track the main branch, which can be ahead of the latest release; what each release
+changed is in the [changelog](https://github.com/caldrix-ai/caldrix/blob/main/CHANGELOG.md).
 
 ## Install
 
@@ -42,8 +43,9 @@ not been verified is listed as not verified on hardware; everything else is not 
 | `hip` | AMD GPUs other than `gfx942` | not supported | Inferno generates GPU code for `gfx942` only |
 | `cpu` | the CPU lane on macOS | not supported | the lane builds for Linux only |
 
-Release archives are built for two platforms: `x86_64-linux` (glibc 2.38 or newer) and `aarch64-darwin`
-(macOS on Apple silicon). The installer refuses any other platform.
+Release archives are built for `x86_64-linux` (glibc 2.38 or newer). The `aarch64-darwin` archive (macOS
+on Apple silicon) is not published yet, so on a Mac the installer finds no archive to download. The
+installer refuses any other platform.
 
 Models: the import accepts dense checkpoints of four architectures (`LlamaForCausalLM`,
 `MistralForCausalLM`, `Qwen2ForCausalLM`, `Qwen3ForCausalLM`) in safetensors, bf16 or f32. Mistral is accepted

@@ -10,16 +10,16 @@ probed, launches no kernel, and exits with status 1 when no lane is usable.
 caldrix doctor
 ```
 
-On a Linux x86-64 machine without an AMD GPU (a development build, run inside the repository's dev
-shell, which is why `cc` is a Nix store path), it printed:
+On a Linux x86-64 machine without an AMD GPU, the v0.1.0 release installed with `install.sh`
+printed:
 
 ```text
-caldrix 0.1.0 (unknown commit, x86_64-linux)
+caldrix 0.1.0 (1b2f29dd1c13, x86_64-linux)
 
 lanes
   metal  no      the Metal lane exists on macOS only
   hip    no      the HIP runtime did not load: dlopen libamdhip64.so: libamdhip64.so: cannot open shared object file: No such file or directory
-  cpu    usable  x86-64-v3 (12 physical cores, cgroup quota 8); cc at /nix/store/xcnqqnhw9hb4j5rjgds2yjryi8qki5f3-gcc-wrapper-15.2.0/bin/cc; libm glibc 2.42
+  cpu    usable  x86-64-v3 (12 physical cores, cgroup quota 8); cc at /usr/bin/cc; libm glibc 2.41
 
 not supported
   Inferno does not run MoE architectures, quantized checkpoints or NVIDIA GPUs today
