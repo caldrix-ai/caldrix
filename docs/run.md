@@ -62,7 +62,10 @@ caldrix run qwen3-0.6b
   context, at most half of it.
 - A single message too long for the context is refused, and the chat continues.
 - A model without a chat template (a base model such as SmolLM2-135M) gets each line as plain text,
-  without the conversation; stderr says so once.
+  without the conversation; stderr says so once. A base model continues text and rarely ends its own
+  reply, so without `--max-tokens` each reply stops at 256 tokens. To chat with a SmolLM2, use
+  `HuggingFaceTB/SmolLM2-135M-Instruct`, which has a chat template; it is accepted by the binary, not
+  verified on hardware.
 - Ctrl-C while an answer is streaming stops that answer. Ctrl-C at the prompt exits, as does end of
   input (Ctrl-D).
 
@@ -71,7 +74,7 @@ caldrix run qwen3-0.6b
 | Flag | Meaning | Default |
 | --- | --- | --- |
 | `-p PROMPT`, `--prompt PROMPT` | answer this prompt and exit | chat |
-| `--max-tokens N` | stop after `N` new tokens (a positive integer) | until the end-of-sequence token or a full context |
+| `--max-tokens N` | stop after `N` new tokens (a positive integer) | until the end-of-sequence token or a full context; 256 tokens for a model without a chat template |
 | `--ctx N` | the compiled context length, in tokens | `2048` |
 | `--backend auto\|hip\|metal\|cpu` | the lane: AMD GPU, Apple GPU or CPU | `auto`: the first usable of `metal`, `hip`, `cpu` ([doctor.md](doctor.md)) |
 
