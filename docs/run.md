@@ -19,8 +19,8 @@ The model comes first; flags follow it.
 1. **A directory** holding `config.json`, `tokenizer.json` and `*.safetensors`. An existing directory
    always wins. An argument starting with `./`, `/` or `~` that is not a directory is refused as
    `no such directory`.
-2. **An alias**: `smollm2`, `llama-8b` or `qwen3-0.6b`, each a Hugging Face repo pinned to a revision
-   ([models.md](models.md)).
+2. **An alias**: `smollm2`, `smollm2-instruct` (from v0.1.2), `llama-8b` or `qwen3-0.6b`, each a Hugging Face repo
+   pinned to a revision ([models.md](models.md)).
 3. **A Hugging Face repo id**, `owner/name` or `owner/name@revision`. Without `@revision` it is `main`.
 
 An alias or a repo id is downloaded into the Hugging Face cache the first time and read from there after.
@@ -63,9 +63,10 @@ caldrix run qwen3-0.6b
 - A single message too long for the context is refused, and the chat continues.
 - A model without a chat template (a base model such as SmolLM2-135M) gets each line as plain text,
   without the conversation; stderr says so once. A base model continues text and rarely ends its own
-  reply, so without `--max-tokens` each reply stops at 256 tokens. To chat with a SmolLM2, use
-  `HuggingFaceTB/SmolLM2-135M-Instruct`, which has a chat template; it is accepted by the binary, not
-  verified on hardware.
+  reply, so from v0.1.2, without `--max-tokens`, each reply stops at 256 tokens. To chat with a SmolLM2, use (from v0.1.2)
+  `caldrix run smollm2-instruct` (SmolLM2-135M-Instruct), which has a chat template. It is verified on the
+  CPU lane (x86-64-v3), not on Metal or AMD GPUs, and what was verified is its tokens on a plain-text
+  prompt: the chat template is not exercised by any gate.
 - Ctrl-C while an answer is streaming stops that answer. Ctrl-C at the prompt exits, as does end of
   input (Ctrl-D).
 
@@ -74,7 +75,7 @@ caldrix run qwen3-0.6b
 | Flag | Meaning | Default |
 | --- | --- | --- |
 | `-p PROMPT`, `--prompt PROMPT` | answer this prompt and exit | chat |
-| `--max-tokens N` | stop after `N` new tokens (a positive integer) | until the end-of-sequence token or a full context; 256 tokens for a model without a chat template |
+| `--max-tokens N` | stop after `N` new tokens (a positive integer) | until the end-of-sequence token or a full context; from v0.1.2, 256 tokens for a model without a chat template |
 | `--ctx N` | the compiled context length, in tokens | `2048` |
 | `--backend auto\|hip\|metal\|cpu` | the lane: AMD GPU, Apple GPU or CPU | `auto`: the first usable of `metal`, `hip`, `cpu` ([doctor.md](doctor.md)) |
 

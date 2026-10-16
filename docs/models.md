@@ -8,11 +8,14 @@ not been verified on hardware.
 
 ## Aliases
 
-Each alias names a model Inferno has run on hardware, pinned to the revision it ran at:
+Each alias names a model Inferno has run on hardware, pinned to the revision it ran at.
+`smollm2-instruct` (from v0.1.2) is verified on the CPU lane (x86-64-v3), not on Metal or AMD GPUs: its tokens on a
+plain-text prompt; its chat template is not exercised by any gate.
 
 | Alias | Hugging Face repo | Revision |
 | --- | --- | --- |
 | `smollm2` | `HuggingFaceTB/SmolLM2-135M` | `93efa2f097d58c2a74874c7e644dbc9b0cee75a2` |
+| `smollm2-instruct` | `HuggingFaceTB/SmolLM2-135M-Instruct` | `12fd25f77366fa6b3b4b768ec3050bf629380bac` |
 | `llama-8b` | `deepseek-ai/DeepSeek-R1-Distill-Llama-8B` | `6a6f4aa4197940add57724a7707d069478df56b1` |
 | `qwen3-0.6b` | `Qwen/Qwen3-0.6B` | `c1899de289a04d12100db370d81485cdf75e47ca` |
 

@@ -51,10 +51,11 @@ Release archives are built for `x86_64-linux` (glibc 2.38 or newer) and, from v0
 
 Models: the import accepts dense checkpoints of four architectures (`LlamaForCausalLM`,
 `MistralForCausalLM`, `Qwen2ForCausalLM`, `Qwen3ForCausalLM`) in safetensors, bf16 or f32. Mistral is accepted
-by the import but has not been verified on hardware. Three aliases
-name the models Inferno has run on hardware, each pinned to a revision: `smollm2`, `llama-8b` and
-`qwen3-0.6b` ([models.md](docs/models.md)). Not supported: mixture-of-experts (MoE) architectures and quantized
-checkpoints.
+by the import but has not been verified on hardware. Four aliases
+name the models Inferno has run on hardware, each pinned to a revision: `smollm2`, `smollm2-instruct`,
+`llama-8b` and `qwen3-0.6b` ([models.md](docs/models.md)); `smollm2-instruct` (from v0.1.2) is verified on the CPU lane (x86-64-v3), not on Metal or AMD GPUs: its tokens on a
+plain-text prompt; its chat template is not exercised by any gate.
+Not supported: mixture-of-experts (MoE) architectures and quantized checkpoints.
 
 Generation is greedy: sampling parameters are refused, never ignored.
 
