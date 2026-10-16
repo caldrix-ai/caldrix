@@ -60,7 +60,7 @@ The [docs](docs/index.md) are plain Markdown, one task per page: [install](docs/
 
 ## License
 
-caldrix is free for non-commercial use. Production and commercial use need a commercial license: licensing@caldrix.ai. See [LICENSE.md](LICENSE.md) and the [License Terms](https://caldrix.ai/terms).
+caldrix is free for non-commercial use. Production and commercial use need a commercial license: jyothsna@caldrix.ai. See [LICENSE.md](LICENSE.md) and the [License Terms](https://caldrix.ai/terms).
 
 ## Bugs and security
 
