@@ -2,6 +2,19 @@
 
 Every caldrix release, newest first. Each release's notes on GitHub are its section here.
 
+## [0.1.2] - 2026-10-17
+
+### Added
+
+- The `smollm2-instruct` alias (`HuggingFaceTB/SmolLM2-135M-Instruct`), a SmolLM2 with a chat template
+  for `caldrix run`. Its tokens are verified on the CPU lane (x86-64-v3) on a plain-text prompt; it is
+  not verified on Metal or AMD GPUs, and no check covers the chat template.
+
+### Changed
+
+- `caldrix run` with a model that has no chat template (such as `smollm2`) stops each reply at 256
+  tokens unless `--max-tokens` is given; before, a base model could run until the context filled.
+
 ## [0.1.1] - 2026-10-16
 
 ### Added
