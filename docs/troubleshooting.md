@@ -164,14 +164,6 @@ Every refusal caldrix prints, with its cause and its fix. Each quoted message is
 
 **Fix.** The model is the first argument: `caldrix run <model> ...` ([run.md](run.md#the-model-argument)).
 
-### A sampling flag
-
-> `caldrix generates greedily (the engine is greedy-only);`
-
-**Cause.** `--temperature`, `--top-p`, `--top-k`, `--min-p`, `--seed` or `--repetition-penalty` was given. Sampling parameters are refused, never ignored.
-
-**Fix.** Remove the flag. Generation is greedy ([api.md](api.md#generation-is-greedy)).
-
 ### A flag `run` does not take
 
 > `caldrix run serves no HTTP; use caldrix serve`
