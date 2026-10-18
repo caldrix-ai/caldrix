@@ -1,13 +1,15 @@
 # caldrix run
 
 `caldrix run <model>` compiles a model for this machine and answers one prompt with `-p`, or, without
-`-p`, chats in the terminal line by line. Generation is greedy; the answer goes to stdout and status
-lines go to stderr.
+`-p`, chats in the terminal line by line. Generation is greedy unless a sampling flag asks otherwise
+([Sampling](#sampling)); the answer goes to stdout and status lines go to stderr.
 
 ## Usage
 
 ```text
-caldrix run <model> [-p PROMPT] [--max-tokens N] [--ctx N] [--backend auto|hip|metal|cpu] [serving flags]
+caldrix run <model> [-p PROMPT] [--system TEXT|@FILE] [--max-tokens N] [--ctx N] [--backend auto|hip|metal|cpu] [--plain]
+    [--temperature T] [--top-k N] [--top-p P] [--min-p M] [--repetition-penalty R] [--seed N]
+    [serving flags]
 ```
 
 The model comes first; flags follow it.
@@ -78,16 +80,39 @@ caldrix run qwen3-0.6b
 | `--max-tokens N` | stop after `N` new tokens (a positive integer) | until the end-of-sequence token or a full context; from v0.1.2, 256 tokens for a model without a chat template |
 | `--ctx N` | the compiled context length, in tokens | `2048` |
 | `--backend auto\|hip\|metal\|cpu` | the lane: AMD GPU, Apple GPU or CPU | `auto`: the first usable of `metal`, `hip`, `cpu` ([doctor.md](doctor.md)) |
+| `--temperature T` | sample the next token at temperature `T` (finite, `>= 0`; `0` picks the most likely token) | `0` |
+| `--top-k N` | keep only the `N` most likely tokens (`0` keeps all) | `0` |
+| `--top-p P` | keep the smallest set of tokens whose probability adds up to `P` (`0 < P <= 1`; `1` keeps all) | `1` |
+| `--min-p M` | drop tokens whose probability is below `M` times the most likely token's (`0 <= M <= 1`) | `0` |
+| `--repetition-penalty R` | divide the score of each token already in the last 64 tokens of prompt and reply by `R` (finite, `> 0`; `1` is off) | `1` |
+| `--seed N` | seed the random draw, so the same prompt gives the same reply on this machine and build | fresh entropy per reply |
 
 Any other flag goes to Inferno's serving library, which checks it: `--dtype`, `--threads`, `--cpu-isa`,
 `--weight-budget` and the rest are the serving flags in [serve.md](serve.md#flags). A flag is checked, and the
 lane chosen, before any download starts.
 
+## Sampling
+
+Without a sampling flag every reply is greedy: each token is the most likely one, and the same
+prompt gives the same reply. The six flags above turn sampling on. The penalty is applied first,
+then `--top-k`, `--top-p` and `--min-p` cut the candidates, then `--temperature` reshapes what is
+left and one token is drawn. `--temperature 0` with a penalty keeps the most likely token after the
+penalty, with no random draw. A value out of range is refused by name before any download starts.
+
+In the chat, the same knobs are commands, applied from the next reply on (a reply already streaming
+is not touched, and `/reset` leaves them alone):
+
+```text
+/temperature T   /top-k N   /top-p P   /min-p M   /repetition-penalty R   /seed N
+```
+
+Each takes a value, `off` (back to its default), or nothing (print its current value); `/sampling`
+prints all six on one line.
+
 ## Refused flags
 
 | Flag | Why |
 | --- | --- |
-| `--temperature`, `--top-p`, `--top-k`, `--min-p`, `--seed`, `--repetition-penalty` | generation is greedy; sampling parameters are refused, never ignored |
 | `--port`, `--host`, `--admin`, `--admin-port` | `caldrix run` serves no HTTP; use `caldrix serve` |
 | `--model-dir` | give the model as the first argument |
 | `--backend host` | the serving library's off-hardware test backend; `caldrix` does not expose it |

@@ -1,8 +1,9 @@
 # HTTP API
 
 `caldrix serve` speaks the OpenAI Chat Completions and Completions APIs on `http://localhost:8425`, with
-no API key, and serves one model. Generation is greedy: a sampling or feature field the server does not
-implement is refused with a `400` that names it, never ignored.
+no API key, and serves one model. Generation is greedy unless a request, or the server's flags, asks for
+[sampling](#sampling); a feature field the server does not implement is refused with a `400` that names
+it, never ignored.
 
 ## Base URL
 
@@ -93,29 +94,49 @@ curl http://localhost:8425/v1/models
 `/healthz` answers `ok` (so does `/health`). `/metrics` is Prometheus text. `/debug/requests` is the
 telemetry of the most recent requests, as JSON; it carries token counts, never text.
 
-## Generation is greedy
+## Sampling
 
-The server decodes greedily and refuses, with a `400` that names the field, any sampling or feature
-field it does not implement. Each field below is accepted only when it is absent, `null` or at the
-neutral value shown:
+Six fields are honoured on both endpoints. Each overrides the server's default for that request when it
+is present; absent or `null` inherits the default, which is greedy unless `caldrix serve` was started
+with the matching flag ([serve.md](serve.md#flags)). The knobs compose: a request's `temperature: 0`
+against a server started with `--repetition-penalty 1.2` keeps the penalty.
 
-- `temperature`: `0`; `top_p`: `1`; `n`: `1`
-- `top_k`: no value (absent or `null` only)
-- `min_p`, `presence_penalty`, `frequency_penalty`, `top_logprobs`: `0`
-- `repetition_penalty`, `best_of`: `1`
-- `logprobs`: `false` or `0`
-- `logit_bias`: `{}`; `tools`: `[]`; `tool_choice`: `"none"`
-- `response_format`: `{"type": "text"}`
+| Field | Accepted | Default |
+| --- | --- | --- |
+| `temperature` | a finite number `>= 0`; `0` is greedy | `0` |
+| `top_k` | an integer `>= 0`; `0`, `-1` or `null` keeps every token | `0` |
+| `top_p` | `0 < top_p <= 1`; `1` keeps every token | `1` |
+| `min_p` | `0 <= min_p <= 1`; `0` is off | `0` |
+| `repetition_penalty` | a finite number `> 0`; `1` is off | `1` |
+| `seed` | a non-negative integer; `-1` or `null` draws a fresh seed | fresh entropy per request |
+
+A value of the wrong type or out of range is a `400` naming the field:
 
 ```sh
 curl http://localhost:8425/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"model": "Qwen/Qwen3-0.6B", "messages": [{"role": "user", "content": "hi"}], "temperature": 0.7}'
+  -d '{"model": "Qwen/Qwen3-0.6B", "messages": [{"role": "user", "content": "hi"}], "top_p": 2}'
 ```
 
 ```text
-{"error":{"code":null,"message":"this server decodes greedily; temperature must be absent or 0","param":"temperature","type":"invalid_request_error"}}
+{"error":{"code":null,"message":"must be 0 < p <= 1, got 2","param":"top_p","type":"invalid_request_error"}}
 ```
+
+The order of operations is the one `caldrix run` uses ([run.md](run.md#sampling)). The record of a
+sampled request in `/debug/requests` carries its settings and the seed it used, so a reply can be
+reproduced on the same machine and build.
+
+## Not implemented
+
+Any other sampling or feature field is refused with a `400` that names it. Each field below is accepted
+only when it is absent, `null` or at the neutral value shown:
+
+- `n`: `1`
+- `presence_penalty`, `frequency_penalty`, `top_logprobs`: `0`
+- `best_of`: `1`
+- `logprobs`: `false` or `0`
+- `logit_bias`: `{}`; `tools`: `[]`; `tool_choice`: `"none"`
+- `response_format`: `{"type": "text"}`
 
 ## Errors
 

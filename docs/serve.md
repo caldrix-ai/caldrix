@@ -92,11 +92,12 @@ download starts.
 | `--shadow-ring N` | with `--admin`: recent requests kept to check a candidate variant against | `8` |
 | `--shadow-requests N` | with `--admin`: requests a candidate must match before it serves | `4` |
 | `--shadow-timeout SECONDS` | with `--admin`: how long a candidate has to match | `600` |
+| `--temperature T`, `--top-k N`, `--top-p P`, `--min-p M`, `--repetition-penalty R`, `--seed N` | the server's default sampling settings, the same knobs as [run.md](run.md#sampling); a request's own fields override them ([api.md](api.md#sampling)) | greedy (`0`, `0`, `1`, `0`, `1`, fresh entropy) |
 
 The kernel-spelling flags (`--batch-gemv`, `--tail`, `--prefill-attention`, `--batch-attention`) are refused
 on the `metal` and `cpu` lanes. The `--admin` flags are refused on the `cpu` lane and with `--weight-budget`.
-Sampling flags (`--temperature`, `--top-p`, `--top-k`, `--min-p`, `--seed`, `--repetition-penalty`) are
-refused: generation is greedy ([api.md](api.md#generation-is-greedy)).
+The sampling flags set the server's defaults for every request; a request's own `temperature`, `top_p`,
+`top_k`, `min_p`, `repetition_penalty` and `seed` override them per call ([api.md](api.md#sampling)).
 
 ## Binding and proxies
 

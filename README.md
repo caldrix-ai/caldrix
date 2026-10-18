@@ -57,7 +57,9 @@ name the models Inferno has run on hardware, each pinned to a revision: `smollm2
 plain-text prompt; its chat template is not exercised by any gate.
 Not supported: mixture-of-experts (MoE) architectures and quantized checkpoints.
 
-Generation is greedy: sampling parameters are refused, never ignored.
+Generation is greedy unless asked: `--temperature`, `--top-k`, `--top-p`, `--min-p`, `--repetition-penalty`
+and `--seed` turn sampling on, and the chat changes them with `/temperature` and its siblings
+([run.md](docs/run.md#sampling)).
 
 ## Docs, for humans and agents
 
