@@ -110,11 +110,11 @@ Every refusal caldrix prints, with its cause and its fix. Each quoted message is
 
 ### Offline and not in the cache
 
-> `HF_HUB_OFFLINE is set and `
+> `is not complete in the Hugging Face cache`
 
-**Cause.** `HF_HUB_OFFLINE` is set, so nothing is downloaded, and the repo at that revision is not complete in the Hugging Face cache.
+**Cause.** `CALDRIX_OFFLINE` or `HF_HUB_OFFLINE` is set, so nothing is downloaded, and the repo at that revision is not complete in the Hugging Face cache. The refusal names whichever variable is set.
 
-**Fix.** Unset `HF_HUB_OFFLINE` and run once with network access, or fill the cache another way ([models.md](models.md#the-cache)).
+**Fix.** Unset that variable and run once with network access, or fill the cache another way ([models.md](models.md#the-cache)).
 
 ### The repo is missing files
 

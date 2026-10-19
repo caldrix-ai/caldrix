@@ -65,6 +65,7 @@ delete a model's `models--<owner>--<name>` directory.
 | --- | --- |
 | `HF_TOKEN` | the Hugging Face token, for gated or private repos (else the `token` file under `HF_HOME`) |
 | `HF_HUB_OFFLINE` | `1`, `on`, `yes` or `true`: no network request; the model must already be complete in the cache |
+| `CALDRIX_OFFLINE` | the same values; covers every network edge caldrix has (the Hub, the model index and the Ollama registry) |
 | `HF_ENDPOINT` | the Hub's base URL, for a mirror |
 | `HF_HUB_CACHE`, `HF_HOME` | where the cache is (above) |
 
