@@ -27,13 +27,16 @@ not been verified is listed as not verified on hardware; everything else is not 
 Release archives are built for `x86_64-linux` (glibc 2.38 or newer) and, from v0.1.1, `aarch64-darwin`
 (macOS 14.0 or newer on Apple silicon). The installer refuses any other platform.
 
-Models: the import accepts dense checkpoints of four architectures (`LlamaForCausalLM`,
-`MistralForCausalLM`, `Qwen2ForCausalLM`, `Qwen3ForCausalLM`) in safetensors, bf16 or f32. Mistral is accepted
-by the import but has not been verified on hardware. Four aliases
-name the models Inferno has run on hardware, each pinned to a revision: `smollm2`, `smollm2-instruct`,
-`llama-8b` and `qwen3-0.6b` ([models.md](models.md)); `smollm2-instruct` (from v0.1.2) is verified on the CPU lane (x86-64-v3), not on Metal or AMD GPUs: its tokens on a
-plain-text prompt; its chat template is not exercised by any gate.
-Not supported: mixture-of-experts (MoE) architectures and quantized checkpoints.
+Models: the import accepts checkpoints of five architectures (`LlamaForCausalLM`,
+`MistralForCausalLM`, `Qwen2ForCausalLM`, `Qwen3ForCausalLM` and the mixture-of-experts
+`Qwen3MoeForCausalLM`) in safetensors, bf16 or f32. Mistral is accepted by the import but has not been
+verified on hardware. Five aliases name the models Inferno has run on hardware, each pinned to a revision:
+`smollm2`, `smollm2-instruct`, `llama-8b`, `qwen3-0.6b` and `qwen3-30b-a3b` ([models.md](models.md));
+`smollm2-instruct` (from v0.1.2) is verified on the CPU lane (x86-64-v3), not on Metal or AMD GPUs: its
+tokens on a plain-text prompt; its chat template is not exercised by any gate. `qwen3-30b-a3b` is verified
+by its token gates on one MI300X (resident), one M1 Max streamed under a 56 GiB `--weight-budget`, and
+the CPU lane (x86-64-v3) streamed under a 20 GiB budget ([models.md](models.md)).
+Not supported: quantized checkpoints.
 
 Generation is greedy unless asked: `--temperature`, `--top-k`, `--top-p`, `--min-p`, `--repetition-penalty`
 and `--seed` turn sampling on, and the chat changes them with `/temperature` and its siblings

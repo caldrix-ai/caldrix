@@ -2,15 +2,20 @@
 
 `caldrix run` and `caldrix serve` take a model as a directory, an alias or a Hugging Face repo id; an alias
 or a repo id is downloaded into the standard Hugging Face cache and read from there after. The import
-accepts dense Llama, Mistral, Qwen2 and Qwen3 checkpoints in safetensors, bf16 or f32, and refuses
-mixture-of-experts (MoE) architectures and quantized checkpoints. Mistral is accepted by the import but has
-not been verified on hardware.
+accepts dense Llama, Mistral, Qwen2 and Qwen3 checkpoints and the Qwen3 mixture-of-experts architecture
+(`Qwen3MoeForCausalLM`) in safetensors, bf16 or f32, and refuses quantized checkpoints. Mistral is accepted
+by the import but has not been verified on hardware.
 
 ## Aliases
 
 Each alias names a model Inferno has run on hardware, pinned to the revision it ran at.
 `smollm2-instruct` (from v0.1.2) is verified on the CPU lane (x86-64-v3), not on Metal or AMD GPUs: its tokens on a
-plain-text prompt; its chat template is not exercised by any gate.
+plain-text prompt; its chat template is not exercised by any gate. `qwen3-30b-a3b` (the mixture-of-experts
+checkpoint) is verified by its token gates — eight greedy tokens of one prompt against the PyTorch reference —
+on one AMD MI300X with every expert resident, on one Apple M1 Max (64 GiB) streamed under a 56 GiB
+`--weight-budget`, and on the CPU lane (x86-64-v3) streamed under a 20 GiB budget; without a budget the
+Metal and CPU lanes load every expert resident, which no run has exercised at this size, and `--max-batch`
+above 1 is refused for it.
 
 | Alias | Hugging Face repo | Revision |
 | --- | --- | --- |
@@ -18,6 +23,7 @@ plain-text prompt; its chat template is not exercised by any gate.
 | `smollm2-instruct` | `HuggingFaceTB/SmolLM2-135M-Instruct` | `12fd25f77366fa6b3b4b768ec3050bf629380bac` |
 | `llama-8b` | `deepseek-ai/DeepSeek-R1-Distill-Llama-8B` | `6a6f4aa4197940add57724a7707d069478df56b1` |
 | `qwen3-0.6b` | `Qwen/Qwen3-0.6B` | `c1899de289a04d12100db370d81485cdf75e47ca` |
+| `qwen3-30b-a3b` | `Qwen/Qwen3-30B-A3B` | `ad44e777bcd18fa416d9da3bd8f70d33ebb85d39` |
 
 ## Repo ids and revisions
 

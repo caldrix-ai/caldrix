@@ -22,7 +22,7 @@ lanes
   cpu    usable  x86-64-v3 (12 physical cores, cgroup quota 8); cc at /usr/bin/cc; libm glibc 2.41
 
 not supported
-  Inferno does not run MoE architectures, quantized checkpoints or NVIDIA GPUs today
+  Inferno does not run quantized checkpoints, quantized GGUF or NVIDIA GPUs today
 
 no kernel was launched; `caldrix run` is what shows a lane works
 ```
