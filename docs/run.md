@@ -97,7 +97,9 @@ Without a sampling flag every reply is greedy: each token is the most likely one
 prompt gives the same reply. The six flags above turn sampling on. The penalty is applied first,
 then `--top-k`, `--top-p` and `--min-p` cut the candidates, then `--temperature` reshapes what is
 left and one token is drawn. `--temperature 0` with a penalty keeps the most likely token after the
-penalty, with no random draw. A value out of range is refused by name before any download starts.
+penalty, with no random draw. On the AMD lane the GPU picks the token, in the same order but with
+its own draw, so a seed's reply there can differ from the CPU's pick; `--sampler host` picks on the CPU
+([api.md](api.md#sampling)). A value out of range is refused by name before any download starts.
 
 In the chat, the same knobs are commands, applied from the next reply on (a reply already streaming
 is not touched, and `/reset` leaves them alone):

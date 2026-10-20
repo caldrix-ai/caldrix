@@ -122,9 +122,17 @@ curl http://localhost:8425/v1/chat/completions \
 {"error":{"code":null,"message":"must be 0 < p <= 1, got 2","param":"top_p","type":"invalid_request_error"}}
 ```
 
-The order of operations is the one `caldrix run` uses ([run.md](run.md#sampling)). The record of a
-sampled request in `/debug/requests` carries its settings and the seed it used, so a reply can be
-reproduced on the same machine and build.
+The knobs apply in the order [run.md](run.md#sampling) gives: the penalty, then top-k, top-p and min-p,
+then the temperature and one random draw. Where the token is picked depends on the lane. On the AMD lane
+with batching on (`--max-batch 8`, its default there, for `caldrix run` as for `caldrix serve`), the GPU
+picks each sampled token. It keeps every token tied with (or within rounding of) the last one a top-k
+or top-p cut keeps, walks the candidates in vocabulary order for the draw, and adds in 32-bit floats,
+so the same seed can give a different reply than a pick on the CPU. `--sampler host` moves that pick
+back to the CPU ([serve.md](serve.md#flags)). Every other lane, and `--max-batch 1`, always picks on
+the CPU, most likely token first, exactly as described in [run.md](run.md#sampling).
+
+The record of a sampled request in `/debug/requests` carries its settings and the seed it used, so a
+reply can be reproduced on the same machine and build, with the same `--sampler`.
 
 ## Not implemented
 

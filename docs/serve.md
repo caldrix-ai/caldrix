@@ -87,6 +87,7 @@ download starts.
 | `--tail generated` | AMD lane only: the output-layer kernel's spelling | `generated` |
 | `--prefill-attention lane0\|tree` | AMD lane only: the prefill attention kernel's spelling | `lane0` |
 | `--batch-attention rows\|grouped` | AMD lane only: the batched attention kernels' spelling | `rows` |
+| `--sampler device\|host` | AMD lane only, with `--max-batch 8`: where a sampled token is picked, on the GPU or on the CPU ([api.md](api.md#sampling)) | `device` |
 | `--admin` | open the variant-swap admin endpoint, on loopback only; needs `--admin-port` | off |
 | `--admin-port N` | the admin endpoint's port, different from `--port` | none |
 | `--shadow-ring N` | with `--admin`: recent requests kept to check a candidate variant against | `8` |
@@ -94,8 +95,8 @@ download starts.
 | `--shadow-timeout SECONDS` | with `--admin`: how long a candidate has to match | `600` |
 | `--temperature T`, `--top-k N`, `--top-p P`, `--min-p M`, `--repetition-penalty R`, `--seed N` | the server's default sampling settings, the same knobs as [run.md](run.md#sampling); a request's own fields override them ([api.md](api.md#sampling)) | greedy (`0`, `0`, `1`, `0`, `1`, fresh entropy) |
 
-The kernel-spelling flags (`--batch-gemv`, `--tail`, `--prefill-attention`, `--batch-attention`) are refused
-on the `metal` and `cpu` lanes. The `--admin` flags are refused on the `cpu` lane and with `--weight-budget`.
+The kernel flags (`--batch-gemv`, `--tail`, `--prefill-attention`, `--batch-attention`, `--sampler`) are
+refused on the `metal` and `cpu` lanes. The `--admin` flags are refused on the `cpu` lane and with `--weight-budget`.
 The sampling flags set the server's defaults for every request; a request's own `temperature`, `top_p`,
 `top_k`, `min_p`, `repetition_penalty` and `seed` override them per call ([api.md](api.md#sampling)).
 
