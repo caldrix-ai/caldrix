@@ -83,7 +83,7 @@ download starts.
 | `--device-sample-period N` | with `sampled`: device timing on one step in `N` | `8` |
 | `--device-sample-offset N` | with `sampled`: which step of each period, below the period | `4` |
 | `--telemetry-log FILE` | append each request's telemetry record to `FILE` | none |
-| `--batch-gemv rows\|x2\|x4` | AMD lane only: the batched GEMV kernel's spelling | `rows` |
+| `--batch-gemv rows\|x2\|x4` | AMD lane only: the batched GEMV kernel's spelling; `x4` is refused when the plan compiles | `rows` |
 | `--tail generated` | AMD lane only: the output-layer kernel's spelling | `generated` |
 | `--prefill-attention lane0\|tree` | AMD lane only: the prefill attention kernel's spelling | `lane0` |
 | `--batch-attention rows\|grouped` | AMD lane only: the batched attention kernels' spelling | `rows` |
