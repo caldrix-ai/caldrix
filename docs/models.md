@@ -90,8 +90,9 @@ models. Within those four, the import refuses:
   than f32, f16 or bf16, which covers quantized checkpoints;
 - any tensor the architecture does not use, since the compiler would ignore it;
 - an activation other than SiLU, an MLP bias, an attention bias outside Qwen2, interleaved RoPE, an active
-  sliding window, and any `rope_scaling` other than Llama 3's (accepted and not applied: the RoPE table is
-  unscaled, and a line says so);
+  sliding window, and any `rope_scaling` other than Llama 3's (Llama 3's is applied to the RoPE table in
+  code, and a line says so at load; no lane has read a scaled table on hardware yet, and the verification
+  files say what has run);
 - dimensions out of bounds or inconsistent with each other.
 
 Each refusal names the field and the value. For a model from the Hub, the refusal comes after
