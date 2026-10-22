@@ -91,8 +91,8 @@ models. Within those four, the import refuses:
 - any tensor the architecture does not use, since the compiler would ignore it;
 - an activation other than SiLU, an MLP bias, an attention bias outside Qwen2, interleaved RoPE, an active
   sliding window, and any `rope_scaling` other than Llama 3's (Llama 3's is applied to the RoPE table in
-  code, and a line says so at load; no lane has read a scaled table on hardware yet, and the verification
-  files say what has run);
+  code, and a line says so at load; only the CPU lane has read a scaled table, at the desk on the 1B — a
+  desk reading, not a run — and no GPU or Mac run has; the verification files say what has run);
 - dimensions out of bounds or inconsistent with each other.
 
 Each refusal names the field and the value. For a model from the Hub, the refusal comes after
