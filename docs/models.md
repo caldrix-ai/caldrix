@@ -93,8 +93,8 @@ models. Within those four, the import refuses:
   sliding window, and any `rope_scaling` other than Llama 3's (Llama 3's is applied to the RoPE table in
   code, and a line says so at load; the Metal lane has read a scaled table on hardware, token-exact with
   the scaling taken from a `config.json` and from a GGUF's `rope_freqs.weight`, in a run on an Apple M1
-  Max, and the CPU lane at the desk on the 1B — a desk reading, not a run — while no AMD run has; the
-  verification files say what has run);
+  Max, the AMD lane likewise in a run on an MI300X, and the CPU lane at the desk on the 1B — a desk
+  reading, not a run; the verification files say what has run);
 - dimensions out of bounds or inconsistent with each other.
 
 Each refusal names the field and the value. For a model from the Hub, the refusal comes after
