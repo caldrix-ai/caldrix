@@ -4,7 +4,6 @@ caldrix.js runs a language model in the browser, in a worker, on WebGPU or WebAs
 package, `@caldrix-ai/caldrix`: the engine's compiled browser host (WebAssembly), the worker that drives
 it, and the typed API around them. The `caldrix` binary the rest of these docs describe is not involved.
 
-The first release of @caldrix-ai/caldrix is not published yet.
 
 This page states only what the browser-gate record (kept in the private Caldrix repository) holds, what
 the package's own tests run in CI, and what the source does.
@@ -183,8 +182,9 @@ package's own assets when the bundle's copy fails.
   worker can fetch your origin with its credentials and read its IndexedDB and caches), and no integrity
   check is possible for a worker's module import, so a page that cannot accept that sets
   `assets.fallback: false`.
-- **Not yet exercised:** until the package is on npm, the real jsdelivr path has not run; the tests point
-  `assets.cdn` at a loopback origin.
+- **What has been checked:** jsdelivr serves the published package's worker, glue and WebAssembly files
+  byte-identical to the npm tarball, with CORS open to any origin. The browser fallback itself has run
+  only against a loopback origin in the tests (`assets.cdn`), not against jsdelivr.
 - **Content-Security-Policy:** a page that uses the fallback needs `worker-src blob:` (a cross-origin
   worker starts through a same-origin module shim), `script-src` and `connect-src` for the CDN origin,
   and `'wasm-unsafe-eval'` for any WebAssembly.

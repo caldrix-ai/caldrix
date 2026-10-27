@@ -72,7 +72,6 @@ The [docs](docs/index.md) are plain Markdown, one task per page: [install](docs/
 caldrix.js runs a language model in a web page, in a worker, on WebGPU or WebAssembly. It is the npm
 package `@caldrix-ai/caldrix`; see [its docs](docs/caldrix-js.md).
 
-The first release of @caldrix-ai/caldrix is not published yet.
 
 ## License
 
