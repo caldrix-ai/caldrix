@@ -2,6 +2,54 @@
 
 Every caldrix release, newest first. Each release's notes on GitHub are its section here.
 
+## [0.2.0] - 2026-10-26
+
+### Added
+
+- `caldrix pool` and `caldrix pool --protocol-version`: a daemon on a Unix socket that holds loaded models
+  and serves them to local clients over a framed protocol ([caldrix pool](https://caldrix.ai/docs/pool)).
+  It has run on the CPU lane, and on Metal on one Apple M1 Max at max context 2048 and one request at
+  8192; it has not been run on AMD GPUs.
+- `caldrix models`: search, inspect and list models from the downloaded model index
+  ([caldrix models](https://caldrix.ai/docs/models#caldrix-models)).
+- `ollama:<name>[:<tag>]` model references, downloaded from the Ollama registry
+  ([Ollama tags](https://caldrix.ai/docs/models#ollama-tags)).
+- Ollama Q4_K_M and Q8_0 tags on Metal, read and sized before any download. On one Apple M1 Max three
+  small tags were token-exact in f32 and `caldrix run` of an 8 B Q4_K_M tag completed.
+- Sampling for `caldrix run`: `--temperature`, `--top-k`, `--top-p`, `--min-p`, `--repetition-penalty` and
+  `--seed`, and the chat's commands for them ([Sampling](https://caldrix.ai/docs/run#sampling)).
+- Sampling for `caldrix serve`: the same six flags set the server's defaults, and `/v1` requests accept
+  `temperature`, `top_p`, `top_k`, `min_p`, `repetition_penalty` and `seed` per request, where v0.1.2
+  refused a non-neutral `temperature`, `top_p`, `top_k`, `min_p` or `repetition_penalty` with a `400`
+  naming the field and accepted `seed` while decoding greedily
+  ([Sampling](https://caldrix.ai/docs/api#sampling)). On the AMD lane with batching on (`--max-batch 8`,
+  its default there) the GPU picks each sampled token, so the same seed can give a different reply than a
+  pick on the CPU; `--sampler host` moves that pick back to the CPU. Every other lane, and
+  `--max-batch 1`, always picks on the CPU.
+- `--system TEXT|@FILE` to set a system prompt, `--raw` to send the prompt as plain text, and `--json` for
+  `caldrix run`'s output as JSON.
+- The `qwen3-30b-a3b` alias and the `Qwen3MoeForCausalLM` architecture, verified by its token gates on
+  one AMD MI300X with every expert resident, on one Apple M1 Max streamed under a 56 GiB
+  `--weight-budget`, and on the CPU lane streamed under a 20 GiB budget; `--max-batch` above 1 is refused
+  for it ([Aliases](https://caldrix.ai/docs/models#aliases)).
+- `CALDRIX_OFFLINE`, like `HF_HUB_OFFLINE` but covering every network edge caldrix has: the Hub, the model
+  index and the Ollama registry ([Environment](https://caldrix.ai/docs/models#environment)).
+- `MistralForCausalLM` is accepted by the import; it is not verified on hardware.
+- Llama 3 rope scaling, applied from a `config.json` and from a GGUF's `rope_freqs.weight`.
+
+### Changed
+
+- Generation is no longer greedy-only: it is greedy unless a sampling flag asks otherwise.
+- The Metal prefill and decode attention are tiled over the context. On one Apple M1 Max a 6002-token
+  prompt ran at max context 7680, and max context 8192 loaded and ran.
+- `caldrix run` opens the chat screen on a terminal; `--plain` keeps the line-by-line chat.
+
+### Known limitations
+
+- Quantized tags are refused on the `cpu` and `hip` lanes; quantized safetensors checkpoints are refused.
+- `caldrix pool` has not been run on AMD GPUs.
+- NVIDIA GPUs are not supported.
+
 ## [0.1.2] - 2026-10-17
 
 ### Added

@@ -22,7 +22,7 @@ lanes
   cpu    usable  x86-64-v3 (12 physical cores, cgroup quota 8); cc at /usr/bin/cc; libm glibc 2.41
 
 not supported
-  Inferno does not run quantized checkpoints, quantized GGUF or NVIDIA GPUs today
+  Inferno runs quantized GGUF (Q4_K_M, Q8_0) on the metal lane; the cpu and hip lanes refuse it; quantized safetensors checkpoints and NVIDIA GPUs are not supported
 
 no kernel was launched; `caldrix run` is what shows a lane works
 ```

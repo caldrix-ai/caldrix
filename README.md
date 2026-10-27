@@ -57,7 +57,7 @@ verified on hardware. Five aliases name the models Inferno has run on hardware, 
 tokens on a plain-text prompt; its chat template is not exercised by any gate. `qwen3-30b-a3b` is verified
 by its token gates on one MI300X (resident), one M1 Max streamed under a 56 GiB `--weight-budget`, and
 the CPU lane (x86-64-v3) streamed under a 20 GiB budget ([models.md](docs/models.md)).
-Not supported: quantized checkpoints.
+Quantized: Ollama Q4_K_M and Q8_0 tags on the `metal` lane only ([models.md](docs/models.md#ollama-tags)); quantized safetensors checkpoints are not supported.
 
 Generation is greedy unless asked: `--temperature`, `--top-k`, `--top-p`, `--min-p`, `--repetition-penalty`
 and `--seed` turn sampling on, and the chat changes them with `/temperature` and its siblings
@@ -65,7 +65,7 @@ and `--seed` turn sampling on, and the chat changes them with `/temperature` and
 
 ## Docs, for humans and agents
 
-The [docs](docs/index.md) are plain Markdown, one task per page: [install](docs/install.md), [doctor](docs/doctor.md), [run](docs/run.md), [serve](docs/serve.md), [HTTP API](docs/api.md), [models](docs/models.md), [troubleshooting](docs/troubleshooting.md). Agents can start at [caldrix.ai/llms.txt](https://caldrix.ai/llms.txt).
+The [docs](docs/index.md) are plain Markdown, one task per page: [install](docs/install.md), [doctor](docs/doctor.md), [run](docs/run.md), [serve](docs/serve.md), [HTTP API](docs/api.md), [models](docs/models.md), [pool](docs/pool.md), [troubleshooting](docs/troubleshooting.md). Agents can start at [caldrix.ai/llms.txt](https://caldrix.ai/llms.txt).
 
 ## In the browser: caldrix.js
 

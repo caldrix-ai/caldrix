@@ -36,7 +36,7 @@ verified on hardware. Five aliases name the models Inferno has run on hardware, 
 tokens on a plain-text prompt; its chat template is not exercised by any gate. `qwen3-30b-a3b` is verified
 by its token gates on one MI300X (resident), one M1 Max streamed under a 56 GiB `--weight-budget`, and
 the CPU lane (x86-64-v3) streamed under a 20 GiB budget ([models.md](models.md)).
-Not supported: quantized checkpoints.
+Quantized: Ollama Q4_K_M and Q8_0 tags on the `metal` lane only ([models.md](models.md#ollama-tags)); quantized safetensors checkpoints are not supported.
 
 Generation is greedy unless asked: `--temperature`, `--top-k`, `--top-p`, `--min-p`, `--repetition-penalty`
 and `--seed` turn sampling on, and the chat changes them with `/temperature` and its siblings
@@ -86,6 +86,7 @@ Any OpenAI client works with its base URL set to `http://localhost:8425/v1`.
 - [caldrix run](run.md): one prompt, or a chat in the terminal.
 - [caldrix serve](serve.md): the HTTP server and its flags.
 - [HTTP API](api.md): the endpoints, the request fields and the errors.
+- [caldrix pool](pool.md): the daemon that holds models for local clients.
 - [Models](models.md): the aliases, the Hugging Face cache and what the import refuses.
 - [Troubleshooting](troubleshooting.md): each refusal, its cause and its fix.
 

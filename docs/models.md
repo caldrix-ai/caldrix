@@ -3,7 +3,8 @@
 `caldrix run` and `caldrix serve` take a model as a directory, an alias or a Hugging Face repo id; an alias
 or a repo id is downloaded into the standard Hugging Face cache and read from there after. The import
 accepts dense Llama, Mistral, Qwen2 and Qwen3 checkpoints and the Qwen3 mixture-of-experts architecture
-(`Qwen3MoeForCausalLM`) in safetensors, bf16 or f32, and refuses quantized checkpoints. Mistral is accepted
+(`Qwen3MoeForCausalLM`) in safetensors, bf16 or f32; quantized safetensors checkpoints are refused. Quantized Ollama tags (Q4_K_M and
+Q8_0) run on the `metal` lane only ([Ollama tags](#ollama-tags)). Mistral is accepted
 by the import but has not been verified on hardware.
 
 ## Aliases
@@ -24,6 +25,37 @@ above 1 is refused for it.
 | `llama-8b` | `deepseek-ai/DeepSeek-R1-Distill-Llama-8B` | `6a6f4aa4197940add57724a7707d069478df56b1` |
 | `qwen3-0.6b` | `Qwen/Qwen3-0.6B` | `c1899de289a04d12100db370d81485cdf75e47ca` |
 | `qwen3-30b-a3b` | `Qwen/Qwen3-30B-A3B` | `ad44e777bcd18fa416d9da3bd8f70d33ebb85d39` |
+
+## Ollama tags
+
+An Ollama model is named `ollama:<name>[:<tag>]`, or `ollama:<namespace>/<name>[:<tag>]` outside the
+library. `caldrix` downloads its GGUF from the Ollama registry.
+
+```sh
+caldrix run ollama:smollm2:135m-instruct-q8_0 -p "What is the capital of France?" --backend metal
+```
+
+A Q4_K_M or Q8_0 tag runs on the `metal` lane. It is read and sized before any download, and refused by name
+on the `cpu` and `hip` lanes. On one Apple M1 Max, `smollm2:135m-instruct-q4_K_M`,
+`smollm2:135m-instruct-q8_0` and `qwen2.5:0.5b-instruct-q4_K_M` were token-exact in f32, and
+`caldrix run` of `deepseek-r1:8b-llama-distill-q4_K_M` completed. Quantized safetensors checkpoints stay
+refused ([What the import refuses](#what-the-import-refuses)).
+
+## caldrix models
+
+`caldrix models` asks the downloaded model index, and the Hugging Face Hub for one repo the index lacks.
+
+```text
+caldrix models search <text> [--json]
+caldrix models info <repo> [--json]
+caldrix models drafts <repo> [--json]
+caldrix models related <repo> [--finetunes|--quantizations|--twins] [--json]
+caldrix models supported [--all] [--json]
+caldrix models update
+```
+
+`--json` prints the result as JSON. `caldrix models update` asks for the index again, even after a failed
+update.
 
 ## Repo ids and revisions
 
