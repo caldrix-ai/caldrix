@@ -88,3 +88,5 @@ Any OpenAI client works with its base URL set to `http://localhost:8425/v1`.
 - [HTTP API](api.md): the endpoints, the request fields and the errors.
 - [Models](models.md): the aliases, the Hugging Face cache and what the import refuses.
 - [Troubleshooting](troubleshooting.md): each refusal, its cause and its fix.
+
+To run a model in the browser instead, see [caldrix.js](caldrix-js.md), the npm package `@caldrix-ai/caldrix`.

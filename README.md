@@ -67,6 +67,13 @@ and `--seed` turn sampling on, and the chat changes them with `/temperature` and
 
 The [docs](docs/index.md) are plain Markdown, one task per page: [install](docs/install.md), [doctor](docs/doctor.md), [run](docs/run.md), [serve](docs/serve.md), [HTTP API](docs/api.md), [models](docs/models.md), [troubleshooting](docs/troubleshooting.md). Agents can start at [caldrix.ai/llms.txt](https://caldrix.ai/llms.txt).
 
+## In the browser: caldrix.js
+
+caldrix.js runs a language model in a web page, in a worker, on WebGPU or WebAssembly. It is the npm
+package `@caldrix-ai/caldrix`; see [its docs](docs/caldrix-js.md).
+
+The first release of @caldrix-ai/caldrix is not published yet.
+
 ## License
 
 caldrix is free for non-commercial use. Production and commercial use need a commercial license: jyothsna@caldrix.ai. See [LICENSE.md](LICENSE.md) and the [License Terms](https://caldrix.ai/terms).
