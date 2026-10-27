@@ -4,7 +4,8 @@
 or a repo id is downloaded into the standard Hugging Face cache and read from there after. The import
 accepts dense Llama, Mistral, Qwen2 and Qwen3 checkpoints and the Qwen3 mixture-of-experts architecture
 (`Qwen3MoeForCausalLM`) in safetensors, bf16 or f32; quantized safetensors checkpoints are refused. Quantized Ollama tags (Q4_K_M and
-Q8_0) run on the `metal` lane only ([Ollama tags](#ollama-tags)). Mistral is accepted
+Q8_0) run on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); the `hip` lane compiles
+them and has not run them on an AMD device ([Ollama tags](#ollama-tags)). Mistral is accepted
 by the import but has not been verified on hardware.
 
 ## Aliases
@@ -35,18 +36,27 @@ library. `caldrix` downloads its GGUF from the Ollama registry.
 caldrix run ollama:smollm2:135m-instruct-q8_0 -p "What is the capital of France?" --backend metal
 ```
 
-A Q4_K_M or Q8_0 tag runs on the `metal` lane. It is read and sized before any download, and refused by name
-on the `cpu` and `hip` lanes. On one Apple M1 Max, `smollm2:135m-instruct-q4_K_M`,
-`smollm2:135m-instruct-q8_0` and `qwen2.5:0.5b-instruct-q4_K_M` were token-exact in f32, and
-`caldrix run` of `deepseek-r1:8b-llama-distill-q4_K_M` completed. Quantized safetensors checkpoints stay
-refused ([What the import refuses](#what-the-import-refuses)).
+A Q4_K_M or Q8_0 tag is read and sized before any download. It runs at an f32 plan, the default when
+`--dtype` is not given; an explicit `--dtype bf16` and `--weight-budget` are refused by name.
+
+- `metal`: on one Apple M1 Max, `smollm2:135m-instruct-q4_K_M`, `smollm2:135m-instruct-q8_0`,
+  `qwen2.5:0.5b-instruct-q4_K_M` and `deepseek-r1:8b-llama-distill-q4_K_M` were token-exact in f32, and
+  `caldrix run` of `deepseek-r1:8b-llama-distill-q4_K_M` completed.
+- `cpu`: at `x86-64-v3`, `smollm2:135m-instruct-q4_K_M`, `smollm2:135m-instruct-q8_0`,
+  `qwen2.5:0.5b-instruct-q4_K_M` and `qwen2.5:0.5b-instruct-q8_0` were token-exact in f32 at the desk on
+  one machine — a desk reading, not a run.
+- `hip`: the lane compiles quantized tags and holds a quantized model to one request at a time
+  (`--max-batch` lowers from 8 to 1 with a startup line, and an explicit `--max-batch 8` is refused by
+  name); nothing quantized has run on an AMD device.
+
+Quantized safetensors checkpoints stay refused ([What the import refuses](#what-the-import-refuses)).
 
 ## caldrix models
 
 `caldrix models` asks the downloaded model index, and the Hugging Face Hub for one repo the index lacks.
 
 ```text
-caldrix models search <text> [--json]
+caldrix models search <text>... [--json]
 caldrix models info <repo> [--json]
 caldrix models drafts <repo> [--json]
 caldrix models related <repo> [--finetunes|--quantizations|--twins] [--json]

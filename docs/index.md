@@ -36,7 +36,7 @@ verified on hardware. Five aliases name the models Inferno has run on hardware, 
 tokens on a plain-text prompt; its chat template is not exercised by any gate. `qwen3-30b-a3b` is verified
 by its token gates on one MI300X (resident), one M1 Max streamed under a 56 GiB `--weight-budget`, and
 the CPU lane (x86-64-v3) streamed under a 20 GiB budget ([models.md](models.md)).
-Quantized: Ollama Q4_K_M and Q8_0 tags on the `metal` lane only ([models.md](models.md#ollama-tags)); quantized safetensors checkpoints are not supported.
+Quantized: Ollama Q4_K_M and Q8_0 tags on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); the `hip` lane compiles them and has not run them on an AMD device ([models.md](models.md#ollama-tags)); quantized safetensors checkpoints are not supported.
 
 Generation is greedy unless asked: `--temperature`, `--top-k`, `--top-p`, `--min-p`, `--repetition-penalty`
 and `--seed` turn sampling on, and the chat changes them with `/temperature` and its siblings

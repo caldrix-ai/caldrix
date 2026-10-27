@@ -11,7 +11,10 @@ caldrix doctor
 ```
 
 On a Linux x86-64 machine without an AMD GPU, the v0.1.0 release installed with `install.sh`
-printed:
+printed the output below, with one change: its `not supported` line is shown as the current binary
+prints it, not as v0.1.0 did. Later versions print more than this capture shows: an `index` section
+and an `ollama cache` section before `not supported`, and each lane's capability vector (`features=`
+on `cpu` and `hip`, `family=` and `simdgroup_bf16=` on `metal`).
 
 ```text
 caldrix 0.1.0 (1b2f29dd1c13, x86_64-linux)
@@ -22,7 +25,7 @@ lanes
   cpu    usable  x86-64-v3 (12 physical cores, cgroup quota 8); cc at /usr/bin/cc; libm glibc 2.41
 
 not supported
-  Inferno runs quantized GGUF (Q4_K_M, Q8_0) on the metal lane; the cpu and hip lanes refuse it; quantized safetensors checkpoints and NVIDIA GPUs are not supported
+  Inferno runs quantized GGUF (Q4_K_M, Q8_0) on the metal lane and on the cpu lane (a desk reading, not a run) and compiles it for the hip lane (not yet run on an AMD device); quantized safetensors checkpoints and NVIDIA GPUs are not supported
 
 no kernel was launched; `caldrix run` is what shows a lane works
 ```

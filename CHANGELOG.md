@@ -2,7 +2,7 @@
 
 Every caldrix release, newest first. Each release's notes on GitHub are its section here.
 
-## [0.2.0] - 2026-10-26
+## [0.2.0] - 2026-10-27
 
 ### Added
 
@@ -14,8 +14,14 @@ Every caldrix release, newest first. Each release's notes on GitHub are its sect
   ([caldrix models](https://caldrix.ai/docs/models#caldrix-models)).
 - `ollama:<name>[:<tag>]` model references, downloaded from the Ollama registry
   ([Ollama tags](https://caldrix.ai/docs/models#ollama-tags)).
-- Ollama Q4_K_M and Q8_0 tags on Metal, read and sized before any download. On one Apple M1 Max three
-  small tags were token-exact in f32 and `caldrix run` of an 8 B Q4_K_M tag completed.
+- Ollama Q4_K_M and Q8_0 tags, read and sized before any download and run at an f32 plan; an explicit
+  `--dtype bf16` and `--weight-budget` are refused for them by name
+  ([Ollama tags](https://caldrix.ai/docs/models#ollama-tags)). On Metal, on one Apple M1 Max, three small
+  tags and an 8 B Q4_K_M tag were token-exact in f32 and `caldrix run` of the 8 B tag completed. On the CPU
+  lane at `x86-64-v3`, four small tags were token-exact in f32 at the desk on one machine, a desk reading,
+  not a run. On AMD GPUs the `hip` lane compiles them and holds a quantized model to one request at a
+  time (`--max-batch` lowers from 8 to 1 with a startup line, and an explicit `--max-batch 8` is refused
+  by name); nothing quantized has run on an AMD device.
 - Sampling for `caldrix run`: `--temperature`, `--top-k`, `--top-p`, `--min-p`, `--repetition-penalty` and
   `--seed`, and the chat's commands for them ([Sampling](https://caldrix.ai/docs/run#sampling)).
 - Sampling for `caldrix serve`: the same six flags set the server's defaults, and `/v1` requests accept
@@ -46,7 +52,8 @@ Every caldrix release, newest first. Each release's notes on GitHub are its sect
 
 ### Known limitations
 
-- Quantized tags are refused on the `cpu` and `hip` lanes; quantized safetensors checkpoints are refused.
+- Quantized tags have not been run on AMD GPUs; on the CPU lane they have only a desk reading, not a run;
+  quantized safetensors checkpoints are refused.
 - `caldrix pool` has not been run on AMD GPUs.
 - NVIDIA GPUs are not supported.
 
