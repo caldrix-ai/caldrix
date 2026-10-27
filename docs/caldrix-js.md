@@ -183,8 +183,11 @@ package's own assets when the bundle's copy fails.
   check is possible for a worker's module import, so a page that cannot accept that sets
   `assets.fallback: false`.
 - **What has been checked:** jsdelivr serves the published package's worker, glue and WebAssembly files
-  byte-identical to the npm tarball, with CORS open to any origin. The browser fallback itself has run
-  only against a loopback origin in the tests (`assets.cdn`), not against jsdelivr.
+  byte-identical to the npm tarball, with CORS open to any origin. After the first release was published,
+  the browser fallback ran once against jsdelivr itself in headless Chromium, with the default `cdn`: a
+  page whose bundle lacked the worker, and one whose bundle lacked the `.wasm`, each chatted to done
+  with `doctor()` naming the jsdelivr URLs and one warning on the console. That was a one-off check at
+  the desk; the committed tests point `assets.cdn` at a loopback origin and never reach jsdelivr.
 - **Content-Security-Policy:** a page that uses the fallback needs `worker-src blob:` (a cross-origin
   worker starts through a same-origin module shim), `script-src` and `connect-src` for the CDN origin,
   and `'wasm-unsafe-eval'` for any WebAssembly.
