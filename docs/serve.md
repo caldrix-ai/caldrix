@@ -85,7 +85,7 @@ download starts.
 | `--telemetry-log FILE` | append each request's telemetry record to `FILE` | none |
 | `--batch-gemv rows\|x2\|x4` | AMD lane only: the batched GEMV kernel's spelling; `x4` is refused when the plan compiles | `rows` |
 | `--tail generated` | AMD lane only: the output-layer kernel's spelling | `generated` |
-| `--prefill-attention lane0\|tree` | AMD lane only: the prefill attention kernel's spelling | `lane0` |
+| `--prefill-attention rows\|tiles` | AMD lane only: the prefill attention kernel's spelling; `tiles` needs `--max-batch 8`, a bf16 Llama model and, with `--prefill-chunk N`, `N` a multiple of 32, and is refused otherwise | `rows` |
 | `--batch-attention rows\|grouped` | AMD lane only: the batched attention kernels' spelling | `rows` |
 | `--sampler device\|host` | AMD lane only, with `--max-batch 8`: where a sampled token is picked, on the GPU or on the CPU ([api.md](api.md#sampling)) | `device` |
 | `--admin` | open the variant-swap admin endpoint, on loopback only; needs `--admin-port` | off |
