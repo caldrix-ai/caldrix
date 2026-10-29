@@ -134,6 +134,79 @@ the CPU, most likely token first, exactly as described in [run.md](run.md#sampli
 The record of a sampled request in `/debug/requests` carries its settings and the seed it used, so a
 reply can be reproduced on the same machine and build, with the same `--sampler`.
 
+## `POST /v1/systemone`
+
+Typed decisions about a `state`, in the System One format: each question is a `choice`, a `score` or a
+`noul` (yes or no), and each answer comes with a probability for every allowed answer. No text is
+generated. Each question becomes one prompt through the model's chat template, with thinking turned
+off, and its answer is read from the model's next-token logits over one label per option: `A` to `Z` for
+`choice` and `score`, `Yes` and `No` for `noul`. The probabilities are a softmax over those labels alone.
+
+```sh
+curl http://localhost:8425/v1/systemone \
+  -H "Content-Type: application/json" \
+  -d '{"model": "Qwen/Qwen3-0.6B", "state": "Customer message: I was charged twice for my order last week and I want one of the payments back.", "questions": {"team": {"type": "choice", "instructions": "Which team should handle this message?", "criteria": {"billing": "payments, refunds and invoices", "shipping": "deliveries, tracking and lost parcels", "technical": "bugs, crashes and login problems"}}, "angry": {"type": "noul", "instructions": "Is the customer angry?"}, "urgency": {"type": "score", "instructions": "How urgent is the message?", "criteria": ["not urgent", "somewhat urgent", "very urgent"]}}}'
+```
+
+```text
+{"model":"Qwen/Qwen3-0.6B","answers":{"team":{"type":"choice","choice":"billing","probabilities":{"billing":0.9976708292961121,"shipping":0.0021615091245621443,"technical":0.00016766643966548145},"confidence":0.9965062439441681},"angry":{"type":"noul","noul":0.981803297996521},"urgency":{"type":"score","score":0.10968978330492973,"legend":{"0":"not urgent","1":"somewhat urgent","2":"very urgent"},"probabilities":{"0":0.9140376448631287,"1":0.06223498284816742,"2":0.023727400228381157},"confidence":0.8354653250426054}},"usage":{"input_tokens":204,"output_tokens":0}}
+```
+
+Answers are read zero-shot from the loaded chat model and are only as good as that model; a trained
+decision model is the planned next step. The answers above are this small model's own.
+
+The request:
+
+- `model` is the served name, as for chat. `state` is a string, an object or an array.
+- `questions` maps 1 to 64 names to questions; answers come back under the same names, in the same
+  order.
+- `choice`: `criteria` maps 1 to 26 option names to a description (a string, an object, an array or
+  `null`); the option order sets the labels `A`, `B`, ….
+- `score`: `criteria` is an array of 1 to 26 levels (each a string, an object or an array).
+- `noul`: `criteria` is optional, `{"true": …, "false": …}`, each a string, an object, an array or `null`.
+- `instructions` is optional on every question: a string, an object, an array or `null`.
+- An object or array in `state`, `instructions`, a description or a level is written into the prompt as
+  compact JSON: keys in the order received, no space after `,` or `:`. A server that writes it with
+  spaces sends the model a different prompt, so its probabilities can differ from these; number
+  formatting inside it (for example `1e-05` against `0.00001`) can differ too. An integer beyond 64 bits is
+  written into the prompt as a floating-point number.
+
+The response:
+
+- `choice`: the chosen option, its `probabilities` by option name and a `confidence`,
+  `max(0, (p_best - 1/n) / (1 - 1/n))` (`1` with one option).
+- `score`: the expected level `score` (the sum of `i * p_i`), the `legend`, the `probabilities` by level
+  index and a `confidence` from the spread around the most likely level (`1` with one level).
+- `noul`: the probability of yes.
+- An exact tie takes the first option. `usage.input_tokens` is the sum of every question's prompt tokens;
+  `output_tokens` is `0`.
+
+Refusals are `400`s, each naming the field in `param`: an unknown field at any level, a duplicate key, more
+questions, options or levels than the limits above, `assets`, `images`, `chat_template_kwargs`, a question
+of `"type": "box"` and a question whose prompt does not fit the context. Three refusals are about the
+server or model, not a field, and carry `"param": null`: a model whose tokenizer does not give every label
+one token of its own inside the model's vocabulary (the message names the label), a model with no chat
+template (`the model has no chat template; /v1/systemone needs one`), and a server started with
+`--max-batch` above `1` (`/v1/systemone needs --max-batch 1`), since the route needs the single-stream
+engine; `--max-batch 1` is the default everywhere except the AMD lane. Every question is checked before
+any is run.
+
+```sh
+curl http://localhost:8425/v1/systemone \
+  -H "Content-Type: application/json" \
+  -d '{"model": "Qwen/Qwen3-0.6B", "state": "s", "questions": {"q": {"type": "box", "criteria": {}}}}'
+```
+
+```text
+{"error":{"code":null,"message":"box questions are not supported by this server","param":"questions.q.type","type":"invalid_request_error"}}
+```
+
+The questions then run one at a time, in order, each through the server's request queue, so other
+requests can run between them. A full queue answers `429` (`the request queue is full`) for the whole
+request, even when earlier questions of it have already run; their work is discarded and no answer is
+returned. `503` (`the engine is unavailable`) means the engine has stopped, and `500` means the engine
+failed on a question or gave no usable reading for it.
+
 ## Not implemented
 
 Any other sampling or feature field is refused with a `400` that names it. Each field below is accepted
