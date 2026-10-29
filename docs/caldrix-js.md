@@ -74,6 +74,7 @@ interface Delta {
 }
 
 interface GenerationOptions {
+  constraint?: { json: Record<string, unknown> } | { oneOf: string[] };
   temperature?: number;
   topK?: number;
   topP?: number;
@@ -87,7 +88,10 @@ type GenerateOptions = GenerationOptions & { signal?: AbortSignal };
 ```
 
 Generation is greedy unless a sampling option is set. Aborting the `signal` ends the generation with
-`finishReason: "abort"`.
+`finishReason: "abort"`. `constraint` limits what the model may write, on both tiers: `json` takes a
+JSON Schema subset and `oneOf` a list of strings, and a schema outside the subset is refused with
+`kind: "request"`; the package README's "Constrained decoding" section states the subset and what has
+run under it.
 
 ### Errors
 
