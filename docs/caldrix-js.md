@@ -70,11 +70,13 @@ interface Delta {
   token?: number;
   done: boolean;
   finishReason?: "stop" | "length" | "abort";
-  usage?: { promptTokens: number; completionTokens: number };
+  usage?: { promptTokens: number; completionTokens: number; cachedTokens: number };
+  logprobs?: { token: number; logprob: number }[];
 }
 
 interface GenerationOptions {
   constraint?: { json: Record<string, unknown> } | { oneOf: string[] };
+  logprobs?: number;
   temperature?: number;
   topK?: number;
   topP?: number;
@@ -92,6 +94,11 @@ Generation is greedy unless a sampling option is set. Aborting the `signal` ends
 JSON Schema subset and `oneOf` a list of strings, and a schema outside the subset is refused with
 `kind: "request"`; the package README's "Constrained decoding" section states the subset and what has
 run under it.
+
+A generation starts from the context the previous one on the same engine left, when the new prompt
+begins with the same tokens; `usage.cachedTokens` on the last delta says how many prompt tokens that
+reused. `logprobs: n` (at most 20, otherwise refused with `kind: "request"`) adds up to `n` candidates (fewer under a constraint)
+as `{ token, logprob }` to each token's delta as its `logprobs`.
 
 ### Errors
 
