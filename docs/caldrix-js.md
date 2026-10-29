@@ -4,6 +4,7 @@ caldrix.js runs a language model in the browser, in a worker, on WebGPU or WebAs
 package, `@caldrix-ai/caldrix`: the engine's compiled browser host (WebAssembly), the worker that drives
 it, and the typed API around them. The `caldrix` binary the rest of these docs describe is not involved.
 
+To run an agent with tools on the engine, see [aerix.js](aerix-js.md).
 
 This page states only what the browser-gate record (kept in the private Caldrix repository) holds, what
 the package's own tests run in CI, and what the source does.
