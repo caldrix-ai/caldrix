@@ -40,9 +40,29 @@ takes no other option. When the directory is not on your `PATH`, the script prin
 
 Any other platform is refused by name. On Linux the script reads the glibc version from `ldd --version`
 and refuses a host below 2.38, or a host whose `ldd` reports no glibc (musl, for example). The refusal
-names the container route instead: images `ghcr.io/caldrix-ai/caldrix:latest-rocm6.4` (AMD) and
-`ghcr.io/caldrix-ai/caldrix:latest-cpu`. Those images are not published yet. On macOS the script reads
+names the container route instead: the CPU image `ghcr.io/caldrix-ai/caldrix:latest-cpu` ([below](#the-cpu-container-image)). On macOS the script reads
 `sw_vers -productVersion` and refuses a Mac below macOS 14.0 before downloading anything.
+
+## The CPU container image
+
+The CPU image is published as `ghcr.io/caldrix-ai/caldrix:0.2.0-cpu` (also `latest-cpu`): linux/amd64, a pinned
+base image, built from the published release archive. Its entrypoint is `caldrix`, and its model cache is
+`HF_HOME=/data/huggingface`, so a volume there avoids downloading the model again:
+
+```sh
+docker run -v caldrix-hf:/data/huggingface ghcr.io/caldrix-ai/caldrix:0.2.0-cpu \
+  run smollm2-instruct -p "The capital of France is" --max-tokens 8
+
+docker run -v caldrix-hf:/data/huggingface -p 8425:8425 ghcr.io/caldrix-ai/caldrix:0.2.0-cpu \
+  serve smollm2-instruct --host 0.0.0.0
+```
+
+`--host 0.0.0.0` exposes an unauthenticated, plaintext server on every interface the container is reachable
+on. Put a gateway with TLS in front of it, or bind to `127.0.0.1` or a private network.
+
+The image is CPU only: its `hip` lane reads `no`, and the AMD (ROCm) image is not published yet. Recorded on
+an MI300X box's host VM: the image pulled by digest printed `caldrix 0.2.0`, its `doctor` read the CPU lane
+usable, and its CPU completion was byte-equal to the installed archive's on the same box.
 
 ## What is checked
 

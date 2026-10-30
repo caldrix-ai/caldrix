@@ -14,6 +14,8 @@ curl -fsSL https://caldrix.ai/install.sh | sh
 With [mise](https://mise.jdx.dev): `"github:caldrix-ai/caldrix" = "latest"` under `[tools]` in `mise.toml`
 ([install](docs/install.md#install-with-mise)).
 
+A CPU-only container image (linux/amd64) is `ghcr.io/caldrix-ai/caldrix:latest-cpu` ([install](docs/install.md#the-cpu-container-image)).
+
 ## Start
 
 ```sh
