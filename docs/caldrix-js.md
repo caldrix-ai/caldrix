@@ -57,7 +57,8 @@ function probe(): Promise<Capabilities>;
 - **`doctor()`** reports the load: the tier that runs (`backend`), `device`, `dtype`, `storage`,
   `adapter`, on WebGPU only `maxContext` and `contextClamp`, where each model file came from and whether
   its digest was checked (`source`), where the package's own files came from (`assets`: `bundle`, `cdn`
-  or `page`, with the URL), and `why` the tier was chosen.
+  or `page`, with the URL), `aliases` (every alias this build loads, each with its `name` and its
+  `format`, `safetensors` or `gguf`), and `why` the tier was chosen.
 - **`dispose()`** releases the worker and everything in it. Every later call throws `request`.
 - **`probe()`** reports what this page can run, without loading anything: the WebAssembly features, the
   WebGPU adapter if there is one, which tiers are available, the tier `"auto"` would choose (`chosen`)
@@ -129,7 +130,13 @@ interface LoadOptions {
   and `requestDevice` succeeds, wasm otherwise; a bf16 plan goes to wasm on the page, before the worker
   starts. `"webgpu"` and `"wasm"` force a tier. `"webgl"` is declared and refused: the backend is not
   built. Under `"auto"`, a load WebGPU then refuses (a larger explicit context, a limit, a device that
-  fails to open) is served by the wasm tier, and `doctor().why` says so.
+  fails to open) is served by the wasm tier, and `doctor().why` says so. A quantized GGUF alias under
+  `"auto"` is served by the wasm tier in this version, with no WebGPU precheck and no device opened, and
+  `doctor().why` says so; an explicit `"webgpu"` on one is refused by name, a `lowering` error.
+- **Quantized aliases**: `smollm2-instruct:q4_K_M` and `smollm2-instruct:q8_0` are one GGUF file each. A
+  load reads the file's header with a range request first, then verifies the whole file against the
+  alias's pinned sha256 before parsing it. The wasm tier has their kernels; the WebGPU tier refuses them by
+  name in this version. What has run with them is under "What has run, and where" below.
 - **`onProgress`**: called with each model file's progress: the file, the bytes loaded and the total
   (`null` when the size is not known).
 - **`dtype`**: the plan's dtype, `"f32"` or `"bf16"`.
@@ -145,8 +152,8 @@ interface LoadOptions {
 
 ## What has run, and where
 
-Only these browser runs are recorded (the browser-gate record, entries 5, 8 and 9); nothing else is
-claimed.
+Only these runs are recorded (the browser-gate record: entries 5, 8 and 9 in the browser, and entry 10,
+off-browser, for the quantized aliases); nothing else is claimed.
 
 - **Model:** SmolLM2-135M-Instruct, one prompt, 8 greedy tokens. No other model or prompt.
 - **Browser:** Chromium driven by Playwright, headless only: the headless shell 153.0.8010.12 on Linux
@@ -164,6 +171,7 @@ claimed.
 - **WebGPU tier on SwiftShader** (entry 8): Dawn on SwiftShader, Google's CPU Vulkan implementation,
   which is a CPU and not a GPU. The f32 plan at f32 weight storage, token-exact, logits worst
   5.874168e-4 against the same bound.
+- quantized aliases: off-browser at the desk (the browser-gate record, entry 10); in headless Chromium the host's `loadGguf` on the tiny test fixture only — no browser run has loaded the pinned files; nothing on a real adapter.
 - **Not run:** any other adapter or GPU; a headed browser; the scalar (non-SIMD) wasm build in a
   browser; real-Hub digest behaviour (the runs used a loopback Hub stand-in); any browser other than
   Playwright's headless Chromium; any other model. No performance figure is recorded or claimed.
