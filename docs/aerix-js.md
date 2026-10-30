@@ -6,7 +6,7 @@ itself: you load a model with caldrix.js and hand its `Engine` to an `Agent`. Th
 for one turn at a time, runs the tools the turn calls, and feeds the results back until the model
 answers with a final or a limit is reached.
 
-`@caldrix-ai/caldrix` is a peer dependency (`^0.2.0`, the first release with constrained decoding).
+`@caldrix-ai/caldrix` is a peer dependency (`^0.3.0`, the caldrix.js that reads a model's `chat_template.jinja`).
 
 ## Install and quick start
 
