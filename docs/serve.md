@@ -70,6 +70,7 @@ download starts.
 | `--dtype bf16\|f32` | the type the model is compiled in | `bf16`; `f32` for a quantized model, which refuses `bf16` |
 | `--queue-depth N` | requests that may wait for the engine; past it a request gets `429` | `8` |
 | `--max-batch 1\|8` | requests decoded together; `8` only on the AMD lane | `8` on the AMD lane; `1` on `metal` and `cpu`, with `--weight-budget`, with `--admin` and for a quantized model, which refuses `8` |
+| `--admission fill\|one` | how prompts are admitted between decode steps: `fill` admits into every free slot, `one` at most one per loop iteration | `fill` |
 | `--threads N` | `cpu` only: the size of the thread pool | the physical cores, capped by a cgroup CPU quota |
 | `--cpu-isa ROW` | `cpu` only: the instruction-set row to compile for (`x86-64-v2`, `x86-64-v3`, `x86-64-v4`), at or below the probed one | the probed row |
 | `--weight-budget BYTES` | stream the weights through this much memory instead of holding them all (`5g`, `4500m` or a byte count); refused on the AMD lane | every weight resident |
