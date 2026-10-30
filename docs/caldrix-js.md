@@ -131,18 +131,19 @@ interface LoadOptions {
   starts. `"webgpu"` and `"wasm"` force a tier. `"webgl"` is declared and refused: the backend is not
   built. Under `"auto"`, a load WebGPU then refuses (a larger explicit context, a limit, a device that
   fails to open) is served by the wasm tier, and `doctor().why` says so. A quantized GGUF alias under
-  `"auto"` is served by the wasm tier in this version, with no WebGPU precheck and no device opened, and
-  `doctor().why` says so; an explicit `"webgpu"` on one is refused by name, a `lowering` error.
+  `"auto"` is placed as any alias: WebGPU is probed first, and a refusal of the same kinds falls back to
+  wasm.
 - **Quantized aliases**: `smollm2-instruct:q4_K_M` and `smollm2-instruct:q8_0` are one GGUF file each. A
   load reads the file's header with a range request first, then verifies the whole file against the
-  alias's pinned sha256 before parsing it. The wasm tier has their kernels; the WebGPU tier refuses them by
-  name in this version. What has run with them is under "What has run, and where" below.
+  alias's pinned sha256 before parsing it. Both tiers have their kernels; on the WebGPU tier the weights
+  stay in their blocks and `doctor().storage` is `"blocks"`. What has run with them is under "What has run, and where" below.
 - **`onProgress`**: called with each model file's progress: the file, the bytes loaded and the total
   (`null` when the size is not known).
 - **`dtype`**: the plan's dtype, `"f32"` or `"bf16"`.
 - **`storage`**: the WebGPU tier's weight storage. `"auto"` stores the block GEMM weights as f16 when the
-  adapter has `shader-f16`; `"f32"` keeps them f32 on any adapter. `doctor().storage` reports it (`null`
-  on wasm). `storage: "f32"` with `backend: "wasm"` is refused.
+  adapter has `shader-f16`; `"f32"` keeps them f32 on any adapter. `storage: "f32"` on a quantized alias
+  is satisfied: nothing is narrowed, and the weights stay in their blocks. `doctor().storage` reports it
+  (`"blocks"` for a quantized alias, `null` on wasm). `storage: "f32"` with `backend: "wasm"` is refused.
 - **`maxContext`**: the context length to load at; see [the WebGPU default context](#the-webgpu-default-context).
 - **`hubBaseUrl`**: where model files are fetched from (default `https://huggingface.co`). **`offline`**
   uses only the browser's cache and fails with `fetch` for a file it lacks.
@@ -152,8 +153,8 @@ interface LoadOptions {
 
 ## What has run, and where
 
-Only these runs are recorded (the browser-gate record: entries 5, 8 and 9 in the browser, and entry 10,
-off-browser, for the quantized aliases); nothing else is claimed.
+Only these runs are recorded (the browser-gate record: entries 5, 8 and 9 in the browser, and for the
+quantized aliases entries 10 and 11 off-browser and entry 12 in the browser); nothing else is claimed.
 
 - **Model:** SmolLM2-135M-Instruct, one prompt, 8 greedy tokens. No other model or prompt.
 - **Browser:** Chromium driven by Playwright, headless only: the headless shell 153.0.8010.12 on Linux
@@ -171,7 +172,7 @@ off-browser, for the quantized aliases); nothing else is claimed.
 - **WebGPU tier on SwiftShader** (entry 8): Dawn on SwiftShader, Google's CPU Vulkan implementation,
   which is a CPU and not a GPU. The f32 plan at f32 weight storage, token-exact, logits worst
   5.874168e-4 against the same bound.
-- quantized aliases: off-browser at the desk (the browser-gate record, entry 10); in headless Chromium the host's `loadGguf` on the tiny test fixture only — no browser run has loaded the pinned files; nothing on a real adapter.
+- quantized aliases: off-browser at the desk on both tiers (the browser-gate record, entries 10 and 11); in headless Chromium through `Caldrix.load` on both tiers on the pinned files, WebGPU on Dawn/SwiftShader, a CPU (entry 12); nothing on a real adapter.
 - **Not run:** any other adapter or GPU; a headed browser; the scalar (non-SIMD) wasm build in a
   browser; real-Hub digest behaviour (the runs used a loopback Hub stand-in); any browser other than
   Playwright's headless Chromium; any other model. No performance figure is recorded or claimed.
