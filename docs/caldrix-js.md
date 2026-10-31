@@ -154,7 +154,7 @@ interface LoadOptions {
 ## What has run, and where
 
 Only these runs are recorded (the browser-gate record: entries 5, 8 and 9 in the browser, and for the
-quantized aliases entries 10 and 11 off-browser and entry 12 in the browser); nothing else is claimed.
+quantized aliases entries 10 and 11 off-browser and entries 12 and 14 in the browser); nothing else is claimed.
 
 - **Model:** SmolLM2-135M-Instruct, one prompt, 8 greedy tokens. No other model or prompt.
 - **Browser:** Chromium driven by Playwright, headless only: the headless shell 153.0.8010.12 on Linux
@@ -172,7 +172,7 @@ quantized aliases entries 10 and 11 off-browser and entry 12 in the browser); no
 - **WebGPU tier on SwiftShader** (entry 8): Dawn on SwiftShader, Google's CPU Vulkan implementation,
   which is a CPU and not a GPU. The f32 plan at f32 weight storage, token-exact, logits worst
   5.874168e-4 against the same bound.
-- quantized aliases: off-browser at the desk on both tiers (the browser-gate record, entries 10 and 11); in headless Chromium through `Caldrix.load` on both tiers on the pinned files, WebGPU on Dawn/SwiftShader, a CPU (entry 12); nothing on a real adapter.
+- quantized aliases: off-browser at the desk on both tiers (the browser-gate record, entries 10 and 11); in headless Chromium through `Caldrix.load` on both tiers on the pinned files, WebGPU on Dawn/SwiftShader, a CPU (entry 12); on the operator's Mac through `Caldrix.load` on both tiers, WebGPU on the Mac's own adapter, vendor `apple`, architecture `metal-3`, token-exact (entry 14).
 - **Not run:** any other adapter or GPU; a headed browser; the scalar (non-SIMD) wasm build in a
   browser; real-Hub digest behaviour (the runs used a loopback Hub stand-in); any browser other than
   Playwright's headless Chromium; any other model. No performance figure is recorded or claimed.
