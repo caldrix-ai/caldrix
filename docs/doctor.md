@@ -20,9 +20,9 @@ on `cpu` and `hip`, `family=` and `simdgroup_bf16=` on `metal`).
 caldrix 0.1.0 (1b2f29dd1c13, x86_64-linux)
 
 lanes
-  metal  no      the Metal lane exists on macOS only
-  hip    no      the HIP runtime did not load: dlopen libamdhip64.so: libamdhip64.so: cannot open shared object file: No such file or directory
-  cpu    usable  x86-64-v3 (12 physical cores, cgroup quota 8); cc at /usr/bin/cc; libm glibc 2.41
+  metal  no      the Metal lane exists on macOS only; speculation=no
+  hip    no      the HIP runtime did not load: dlopen libamdhip64.so: libamdhip64.so: cannot open shared object file: No such file or directory; speculation=no
+  cpu    usable  x86-64-v3 (12 physical cores, cgroup quota 8); cc at /usr/bin/cc; libm glibc 2.41; speculation=yes
 
 not supported
   Inferno runs quantized GGUF (Q4_K_M, Q8_0) on the metal and hip lanes and on the cpu lane (a desk reading, not a run); quantized safetensors checkpoints and NVIDIA GPUs are not supported
@@ -37,6 +37,9 @@ no kernel was launched; `caldrix run` is what shows a lane works
 - **`lanes`** has one line per lane, in the order `--backend auto` tries them: `metal`, `hip`, `cpu`.
   Each says `usable` with what was found, or `no` with the reason. `caldrix run` and `caldrix serve`
   with `--backend auto` (the default) take the first usable lane.
+- **`speculation=yes` or `speculation=no`** ends each lane line: whether the lane can check a draft model's
+  guesses, so `--draft-model` can speculate there ([run.md](run.md#speculative-decoding)). It reports what the
+  build supports, not a measurement; today only `cpu` says `yes`.
 - **`not supported`** always lists what Inferno does not run. When a device under `/sys/class/drm`
   reports NVIDIA's vendor id, an extra line says an NVIDIA device is present and not supported.
 - **The last line** is a reminder: the report comes from probes, and only `caldrix run` shows a lane

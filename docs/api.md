@@ -77,6 +77,24 @@ curl http://localhost:8425/v1/completions \
   each streamed chunk). It defaults to `false`.
 - `seed` and `user` are accepted, and so is any field this page does not name.
 
+### Speculative decoding
+
+A server started with `--speculate draft|ngram|auto` decodes single-stream with a proposer and verifies its
+guesses against the loaded model; greedy output is the same tokens plain decoding gives. The flags:
+
+- `--speculate off|draft|ngram|auto` (default `off`); `--draft <dir>` names the draft model;
+  `--draft-tokens <1..=8>` fixes the draft length (absent: tuned live); `--ngram <min>:<max>` sets the
+  lookup's suffix lengths (default `2:4`); `--speculation-memory <path>` keeps the tuner's state between runs.
+- An explicit mode is refused at start by name when the server is batched (`restart with --max-batch 1`), on a
+  backend that cannot verify a draft (only `cpu` today), or with `--weight-budget`; `auto` turns itself off with a note.
+- Under `auto`, a draft that fails to load gives way to n-gram lookup with a note, and `--speculation-memory`
+  is then neither read nor written, since it holds the draft's state.
+- A sampled request carrying a seed (its own `seed`, or the server's `--seed`) and a request decoded under a
+  constraint mask run without speculation.
+
+When a request speculated, its `usage` gains `"speculative": {"proposed": <n>, "accepted": <n>}`, the draft
+tokens proposed and accepted. No speed is claimed here.
+
 ## `GET /v1/models`
 
 The one model this server serves:

@@ -64,6 +64,12 @@ caldrix models supported [--all] [--json]
 caldrix models update
 ```
 
+`caldrix models drafts` lists the draft candidates the index knows for a repo. `caldrix` speculates with the
+first candidate that passes its checks on this machine; declared speculator heads, MoE and quantized
+checkpoints are not drafts in this release. When an earlier run on this machine settled a candidate, a line
+`last run on this machine: <draft> was turned off` or `<draft> stayed on` follows, with no figure
+([run.md](run.md#speculative-decoding)).
+
 `--json` prints the result as JSON. `caldrix models update` asks for the index again, even after a failed
 update.
 

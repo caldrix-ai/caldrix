@@ -8,7 +8,7 @@
 
 ```text
 caldrix run <model> [-p PROMPT] [--system TEXT|@FILE] [--max-tokens N] [--ctx N] [--backend auto|hip|metal|cpu] [--plain]
-    [--temperature T] [--top-k N] [--top-p P] [--min-p M] [--repetition-penalty R] [--seed N]
+    [--draft-model DIR|ALIAS|REPO] [--temperature T] [--top-k N] [--top-p P] [--min-p M] [--repetition-penalty R] [--seed N]
     [serving flags]
 ```
 
@@ -80,6 +80,7 @@ caldrix run qwen3-0.6b
 | `--max-tokens N` | stop after `N` new tokens (a positive integer) | until the end-of-sequence token or a full context; from v0.1.2, 256 tokens for a model without a chat template |
 | `--ctx N` | the compiled context length, in tokens | `2048` |
 | `--backend auto\|hip\|metal\|cpu` | the lane: AMD GPU, Apple GPU or CPU | `auto`: the first usable of `metal`, `hip`, `cpu` ([doctor.md](doctor.md)) |
+| `--draft-model DIR\|ALIAS\|REPO` | speculate with this draft model: a directory, an alias or a Hugging Face repo ([Speculative decoding](#speculative-decoding)) | none |
 | `--temperature T` | sample the next token at temperature `T` (finite, `>= 0`; `0` picks the most likely token) | `0` |
 | `--top-k N` | keep only the `N` most likely tokens (`0` keeps all) | `0` |
 | `--top-p P` | keep the smallest set of tokens whose probability adds up to `P` (`0 < P <= 1`; `1` keeps all) | `1` |
@@ -90,6 +91,32 @@ caldrix run qwen3-0.6b
 Any other flag goes to Inferno's serving library, which checks it: `--dtype`, `--threads`, `--cpu-isa`,
 `--weight-budget` and the rest are the serving flags in [serve.md](serve.md#flags). A flag is checked, and the
 lane chosen, before any download starts.
+
+## Speculative decoding
+
+`--draft-model` names a small model that guesses tokens ahead of the main one; the main model checks the
+guesses, and a greedy reply is the same tokens plain decoding gives. It works on a lane that can check a draft:
+`caldrix doctor` prints `speculation=yes` or `speculation=no` on each lane line ([doctor.md](doctor.md)), and
+today only `cpu` says `yes`. On another lane the flag is not used, and stderr says why.
+
+- Before any download, a draft the model index describes must pass the architecture gate and, when the index
+  also holds the main model, fit beside it: in memory with both models resident, and on disk, where the draft's
+  own download is compared with the free space (the main model's download still to come is not counted). A
+  draft named as a directory, or a Hub draft the index does not describe at that revision, gets neither check
+  from `caldrix`; Inferno's serving library checks it when it loads it. Once the draft's files are fetched, its
+  tokenizer must match the main model's.
+- A suggested draft that fails the gate or the fit is passed over for the next candidate. A draft that cannot
+  be fetched, whose tokenizer differs, or that fails to load is not replaced. None of this stops the run:
+  stderr names the draft and why, and the run speculates with n-gram lookup (guesses taken from the text
+  already in the conversation) instead.
+- Without `--draft-model`, `caldrix` chooses a draft by itself from the model index only on the AMD lane, and
+  only once that lane can check a draft, which it cannot yet; today a draft is used only when you name it. `caldrix models drafts <repo>` lists the candidates the index knows ([models.md](models.md)).
+- A suggested draft that was turned off on this machine in an earlier run is not tried again for the same
+  model. A draft you name with `--draft-model` is still tried, and stderr says it lost last time.
+- Speculation runs one request at a time, so `--max-batch` other than `1` leaves it off; `--weight-budget`
+  does too. Pool members do not speculate, and an Ollama model is not a draft.
+
+Nothing here claims a speed-up: no speed has been measured.
 
 ## Sampling
 

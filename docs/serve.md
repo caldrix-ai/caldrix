@@ -89,6 +89,7 @@ download starts.
 | `--prefill-attention rows\|tiles` | AMD lane only: the prefill attention kernel's spelling; `tiles` needs `--max-batch 8`, a bf16 Llama model and, with `--prefill-chunk N`, `N` a multiple of 32, and is refused otherwise | `rows` |
 | `--batch-attention rows\|grouped` | AMD lane only: the batched attention kernels' spelling | `rows` |
 | `--sampler device\|host` | AMD lane only, with `--max-batch 8`: where a sampled token is picked, on the GPU or on the CPU ([api.md](api.md#sampling)) | `device` |
+| `--draft-model DIR\|ALIAS\|REPO` | speculate with this draft model on a lane that can check a draft (`speculation=yes` in [doctor.md](doctor.md)); a draft that fails its checks falls back to n-gram lookup, with a stderr line ([run.md](run.md#speculative-decoding)) | none |
 | `--admin` | open the variant-swap admin endpoint, on loopback only; needs `--admin-port` | off |
 | `--admin-port N` | the admin endpoint's port, different from `--port` | none |
 | `--shadow-ring N` | with `--admin`: recent requests kept to check a candidate variant against | `8` |

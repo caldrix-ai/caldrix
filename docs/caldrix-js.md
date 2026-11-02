@@ -52,7 +52,7 @@ class Engine {
 function probe(): Promise<Capabilities>;
 ```
 
-`model` is an alias this build ships (`doctor().aliases`) or a Hugging Face repo id, `owner/name` or `owner/name@<revision>`. A repo id is resolved once through the Hub's model API to its canonical id and commit sha, and every file is fetched and cached at that sha; `doctor().model` and `doctor().revision` are the canonical id and the sha, and the doctor line says `(resolved from <id>)` when the canonical id differs from the one asked (a rename, or a different letter case). The browser build sends no token: a gated repo is refused by name, a private one reads as not found (the Hub answers it as it answers a missing repo), and the caldrix CLI, which reads `HF_TOKEN`, loads both. A repo id loads a dense Llama-family checkpoint (`config.json`, `tokenizer.json`, `model.safetensors` or its index); an adapter or a bitsandbytes 4-bit repo is refused by name before any weight byte.
+`model` is an alias this build ships (`doctor().aliases`) or a Hugging Face repo id, `owner/name` or `owner/name@<revision>`. A repo id is resolved once through the Hub's model API to its canonical id and commit sha, and every file is fetched and cached at that sha; `doctor().model` and `doctor().revision` are the canonical id and the sha, and the doctor line says `(resolved from <id>)` when the canonical id differs from the one asked (a rename, or a different letter case). The browser build sends no token: a gated repo is refused by name, a private one reads as not found (the Hub answers it as it answers a missing repo), and the caldrix CLI, which reads `HF_TOKEN`, loads both. A repo id loads a dense Llama-family checkpoint, a bitsandbytes nf4 checkpoint (dequantized to the plan dtype at import: it runs at its dense size, not its download size; `doctor().note` says both), a PEFT LoRA adapter repo (its base, named by `adapter_config.json`, resolved once through the Hub's model API, and the adapter folded into it tensor by tensor at import), or a LoRA adapter over an nf4 base. `doctor().provenance` is the caldrix CLI's `model:` line, naming both repos and shas; progress events name the repo each file comes from. Folded weights are never cached: a repeat load fetches nothing new and folds again. A gated base, an adapter over an adapter, a pickle-only adapter and a repo carrying both a model and an adapter are refused by name before any weight byte.
 
 - **`chat`** formats the messages with the model's chat template; **`complete`** continues a plain-text
   prompt, or a prompt given as token ids. Both yield deltas until one has `done: true`.
@@ -60,7 +60,7 @@ function probe(): Promise<Capabilities>;
   `adapter`, on WebGPU only `maxContext` and `contextClamp`, where each model file came from and whether
   its digest was checked (`source`), where the package's own files came from (`assets`: `bundle`, `cdn`
   or `page`, with the URL), `aliases` (every alias this build loads, each with its `name` and its
-  `format`, `safetensors` or `gguf`), and `why` the tier was chosen.
+  `format`, `safetensors` or `gguf`), `provenance` (a densified load's `model:` line, `null` for a model read as it lies), `note` (an nf4 repo's 4-bit note, `null` otherwise), and `why` the tier was chosen.
 - **`dispose()`** releases the worker and everything in it. Every later call throws `request`.
 - **`probe()`** reports what this page can run, without loading anything: the WebAssembly features, the
   WebGPU adapter if there is one, which tiers are available, the tier `"auto"` would choose (`chosen`)
@@ -118,7 +118,7 @@ type Kind = "probe" | "fit" | "architecture" | "fetch" | "digest" | "validate" |
 interface LoadOptions {
   backend?: "auto" | "webgpu" | "wasm" | "webgl";
   offline?: boolean;
-  onProgress?: (p: { file: string; loaded: number; total: number | null }) => void;
+  onProgress?: (p: { file: string; loaded: number; total: number | null; repo: string; revision: string; provenance?: string }) => void;
   hubBaseUrl?: string;
   dtype?: "f32" | "bf16";
   maxContext?: number;
@@ -140,7 +140,7 @@ interface LoadOptions {
   alias's pinned sha256 before parsing it. Both tiers have their kernels; on the WebGPU tier the weights
   stay in their blocks and `doctor().storage` is `"blocks"`. What has run with them is under "What has run, and where" below.
 - **`onProgress`**: called with each model file's progress: the file, the bytes loaded and the total
-  (`null` when the size is not known).
+  (`null` when the size is not known), `repo` and `revision` (the repo and commit it is fetched from: for an adapter, its own or its base's) and, once the tier that serves is settled, `provenance` (the `model:` line of a densified load).
 - **`dtype`**: the plan's dtype, `"f32"` or `"bf16"`.
 - **`storage`**: the WebGPU tier's weight storage. `"auto"` stores the block GEMM weights as f16 when the
   adapter has `shader-f16`; `"f32"` keeps them f32 on any adapter. `storage: "f32"` on a quantized alias
