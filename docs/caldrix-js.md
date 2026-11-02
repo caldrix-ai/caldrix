@@ -41,7 +41,7 @@ below name. As the package's declarations have them:
 
 ```ts
 class Caldrix {
-  static load(alias: string, opts?: LoadOptions): Promise<Engine>;
+  static load(model: string, opts?: LoadOptions): Promise<Engine>;
 }
 class Engine {
   chat(messages: ChatMessage[], opts?: GenerateOptions): AsyncIterable<Delta>;
@@ -51,6 +51,8 @@ class Engine {
 }
 function probe(): Promise<Capabilities>;
 ```
+
+`model` is an alias this build ships (`doctor().aliases`) or a Hugging Face repo id, `owner/name` or `owner/name@<revision>`. A repo id is resolved once through the Hub's model API to its canonical id and commit sha, and every file is fetched and cached at that sha; `doctor().model` and `doctor().revision` are the canonical id and the sha, and the doctor line says `(resolved from <id>)` when the canonical id differs from the one asked (a rename, or a different letter case). The browser build sends no token: a gated repo is refused by name, a private one reads as not found (the Hub answers it as it answers a missing repo), and the caldrix CLI, which reads `HF_TOKEN`, loads both. A repo id loads a dense Llama-family checkpoint (`config.json`, `tokenizer.json`, `model.safetensors` or its index); an adapter or a bitsandbytes 4-bit repo is refused by name before any weight byte.
 
 - **`chat`** formats the messages with the model's chat template; **`complete`** continues a plain-text
   prompt, or a prompt given as token ids. Both yield deltas until one has `done: true`.
@@ -145,7 +147,7 @@ interface LoadOptions {
   is satisfied: nothing is narrowed, and the weights stay in their blocks. `doctor().storage` reports it
   (`"blocks"` for a quantized alias, `null` on wasm). `storage: "f32"` with `backend: "wasm"` is refused.
 - **`maxContext`**: the context length to load at; see [the WebGPU default context](#the-webgpu-default-context).
-- **`hubBaseUrl`**: where model files are fetched from (default `https://huggingface.co`). **`offline`**
+- **`hubBaseUrl`**: where the model files and, for a repo id, the Hub listing (`/api/models/…`) are fetched from (default `https://huggingface.co`); a mirror serving only files loads aliases but not repo ids. **`offline`**
   uses only the browser's cache and fails with `fetch` for a file it lacks.
 - **`signal`**: cancels the load. Before the model is loaded, an abort terminates the engine's worker
   and the load rejects with `fetch`; after the load resolves the signal is ignored.
