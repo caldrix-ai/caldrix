@@ -18,7 +18,8 @@ The model comes first; flags follow it.
 
 `<model>` is one of, checked in this order:
 
-1. **A directory** holding `config.json`, `tokenizer.json` and `*.safetensors`. An existing directory
+1. **A directory** holding `config.json`, a tokenizer (`tokenizer.json` or `tokenizer.model`) and
+   `*.safetensors`. An existing directory
    always wins. An argument starting with `./`, `/` or `~` that is not a directory is refused as
    `no such directory`.
 2. **An alias**: `smollm2`, `smollm2-instruct` (from v0.1.2), `llama-8b` or `qwen3-0.6b`, each a Hugging Face repo

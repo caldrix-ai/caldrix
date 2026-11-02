@@ -118,13 +118,28 @@ Every refusal caldrix prints, with its cause and its fix. Each quoted message is
 
 ### The repo is missing files
 
-> `inferno needs config.json, tokenizer.json and *.safetensors`
+> `inferno needs config.json, a tokenizer (tokenizer.json, or a SentencePiece tokenizer.model) and *.safetensors`
 
 > `the repo has no *.safetensors; inferno reads safetensors only`
 
-**Cause.** The repo lacks `config.json`, `tokenizer.json` or any `*.safetensors` file. GGUF, `.bin` and other formats are not read.
+**Cause.** The repo lacks `config.json`, a tokenizer (`tokenizer.json`, or a SentencePiece `tokenizer.model`) or any `*.safetensors` file. GGUF, `.bin` and other formats are not read.
 
 **Fix.** Use a repo that publishes safetensors with a tokenizer ([models.md](models.md#what-is-downloaded)).
+
+### The repo's `tokenizer.model` is refused
+
+> `which inferno does not convert yet`
+
+> `which inferno cannot reproduce exactly`
+
+**Cause.** The repo has no `tokenizer.json`, and its SentencePiece `tokenizer.model` is a kind inferno
+does not read yet, or sets an option inferno cannot reproduce exactly; the message names which. A
+download reads `the repo has no tokenizer.json, and …` and stops right after `config.json`, so
+nothing else was downloaded. A model read from disk (a local directory, the cache when offline,
+`inferno-serve --model-dir`) and the browser read `the model has no tokenizer.json, and …`; the
+browser names the repo first and refuses before the first weight file.
+
+**Fix.** Use a repo of the same model that publishes `tokenizer.json`.
 
 ### The model's `config.json` is refused
 

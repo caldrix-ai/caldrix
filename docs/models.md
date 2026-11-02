@@ -83,7 +83,8 @@ caldrix run Qwen/Qwen3-0.6B@main -p "What is the capital of France?"
 ```
 
 The revision is resolved to its commit first, and every file is fetched at that commit. A directory
-holding `config.json`, `tokenizer.json` and `*.safetensors` is used as it is, with nothing downloaded.
+holding `config.json`, a tokenizer (`tokenizer.json` or `tokenizer.model`) and `*.safetensors` is used as
+it is, with nothing downloaded.
 
 ## What is downloaded
 
@@ -92,9 +93,15 @@ From the top level of the repo, at the resolved commit:
 - `config.json`, first, alone. It must pass the import's checks (below) before anything else is fetched,
   so a refused model costs one small download.
 - `tokenizer.json`, and `tokenizer_config.json` and `generation_config.json` when the repo has them.
+  A repo without `tokenizer.json` needs a SentencePiece `tokenizer.model` instead: right after
+  `config.json` it is fetched (with `added_tokens.json` and `tokenizer_config.json` when the repo has
+  them) and checked before any weights. inferno converts a `tokenizer.model` only when it supports that
+  kind; otherwise the refusal says why, and nothing else is downloaded. A repo with `tokenizer.json`
+  never downloads its `tokenizer.model`.
 - `model.safetensors.index.json` when the repo has one, then every `*.safetensors` file.
 
-A repo without `config.json`, `tokenizer.json` or any `*.safetensors` file is refused; GGUF, `.bin` and other
+A repo without `config.json`, a tokenizer (`tokenizer.json`, or a SentencePiece `tokenizer.model`) or any
+`*.safetensors` file is refused; GGUF, `.bin` and other
 weight formats are not supported. Before downloading, `caldrix` prints the number of files and their total
 size, then each file. Files already in the cache are kept, so an interrupted download resumes at the
 first missing file.
