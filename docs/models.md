@@ -131,8 +131,7 @@ models. Within those four, the import refuses:
 - a `torch_dtype` other than bf16 or f32 (f16 is refused by name), and any tensor stored as a type other
   than f32, f16 or bf16, which covers quantized checkpoints;
 - any tensor the architecture does not use, since the compiler would ignore it;
-- an activation other than SiLU, an MLP bias, an attention bias outside Qwen2, interleaved RoPE, an active
-  sliding window, and any `rope_scaling` other than Llama 3's (Llama 3's is applied to the RoPE table in
+- an activation other than SiLU, an MLP bias, an attention bias outside Qwen2, interleaved RoPE, and any `rope_scaling` other than Llama 3's (Llama 3's is applied to the RoPE table in
   code, and a line says so at load; the Metal lane has read a scaled table on hardware, token-exact with
   the scaling taken from a `config.json` and from a GGUF's `rope_freqs.weight`, in a run on an Apple M1
   Max, the AMD lane likewise in a run on an MI300X, and the CPU lane at the desk on the 1B — a desk
@@ -141,3 +140,7 @@ models. Within those four, the import refuses:
 
 Each refusal names the field and the value. For a model from the Hub, the refusal comes after
 `config.json` alone and says nothing else was downloaded.
+
+A model with an active sliding window (a Mistral model with `sliding_window` set, or a Qwen model with
+`use_sliding_window: true`) runs at a context no wider than its window: within the window the window changes
+nothing, and a wider `--ctx` is refused with the window's size.
