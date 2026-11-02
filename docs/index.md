@@ -82,6 +82,7 @@ Any OpenAI client works with its base URL set to `http://localhost:8425/v1`.
 
 - [Quickstart](index.md): this page.
 - [Install](install.md): the installer, its options, checksums and uninstalling.
+- [Kubernetes](kubernetes.md): the Helm chart, what it installs, its values and what it does not do.
 - [caldrix doctor](doctor.md): what each line of the report means.
 - [caldrix run](run.md): one prompt, or a chat in the terminal.
 - [caldrix serve](serve.md): the HTTP server and its flags.

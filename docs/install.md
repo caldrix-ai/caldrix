@@ -64,6 +64,8 @@ The image is CPU only: its `hip` lane reads `no`, and the AMD (ROCm) image is no
 an MI300X box's host VM: the image pulled by digest printed `caldrix 0.2.0`, its `doctor` read the CPU lane
 usable, and its CPU completion was byte-equal to the installed archive's on the same box.
 
+On Kubernetes, the Helm chart runs this image; see [Kubernetes](kubernetes.md).
+
 ## What is checked
 
 Each release ships `caldrix-<version>-<platform>.tar.gz` and its `.sha256` file. The archive holds three
