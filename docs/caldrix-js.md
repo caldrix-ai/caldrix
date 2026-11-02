@@ -156,9 +156,11 @@ interface LoadOptions {
 ## What has run, and where
 
 Only these runs are recorded (the browser-gate record: entries 5, 8 and 9 in the browser, and for the
-quantized aliases entries 10 and 11 off-browser and entries 12 and 14 in the browser); nothing else is claimed.
+quantized aliases entries 10 and 11 off-browser and entries 12 and 14 in the browser, and for the adapter and
+nf4 repos entry 16 off-browser and entry 17 in the browser); nothing else is claimed.
 
-- **Model:** SmolLM2-135M-Instruct, one prompt, 8 greedy tokens. No other model or prompt.
+- **Model:** SmolLM2-135M-Instruct, one prompt, 8 greedy tokens; the adapter and nf4 repos below add a
+  LoRA adapter over it and SmolLM2-360M-Instruct's nf4 repo, on their fixtures' prompt. No other model or prompt.
 - **Browser:** Chromium driven by Playwright, headless only: the headless shell 153.0.8010.12 on Linux
   (entries 5 and 8) and on an Apple M1 Max (entry 9), and on that Mac Playwright's full Chromium (new
   headless mode, userAgent `HeadlessChrome/153.0.0.0`) for the WebGPU tier (entry 9). No other browser.
@@ -175,8 +177,10 @@ quantized aliases entries 10 and 11 off-browser and entries 12 and 14 in the bro
   which is a CPU and not a GPU. The f32 plan at f32 weight storage, token-exact, logits worst
   5.874168e-4 against the same bound.
 - quantized aliases: off-browser at the desk on both tiers (the browser-gate record, entries 10 and 11); in headless Chromium through `Caldrix.load` on both tiers on the pinned files, WebGPU on Dawn/SwiftShader, a CPU (entry 12); on the operator's Mac through `Caldrix.load` on both tiers, WebGPU on the Mac's own adapter, vendor `apple`, architecture `metal-3`, token-exact (entry 14).
-- **Not run:** any other adapter or GPU; a headed browser; the scalar (non-SIMD) wasm build in a
-  browser; real-Hub digest behaviour (the runs used a loopback Hub stand-in); any browser other than
+- adapter and nf4 repos by id (a LoRA adapter over SmolLM2-135M-Instruct, and SmolLM2-360M-Instruct's bitsandbytes nf4 repo, each at a pinned sha): off-browser at the desk on both tiers (the browser-gate record, entry 16: wasm both pairs and WebGPU the LoRA pair token-exact, the f32 plan at f32 weight storage; the WebGPU nf4 pair stopped at lavapipe's storage-buffer binding limit); in headless Chromium through `Caldrix.load` by repo id on both tiers, both pairs token-exact, the f32 plan at f32 weight storage, WebGPU on Dawn/SwiftShader, a CPU (entry 17).
+- **Not run:** any other WebGPU adapter or GPU; a headed browser; the scalar (non-SIMD) wasm build in a
+  browser; real-Hub digest behaviour (the runs used a loopback Hub stand-in); a real Hub listing for a repo id
+  (the loopback hub served the pinned snapshots); any browser other than
   Playwright's headless Chromium; any other model. No performance figure is recorded or claimed.
 
 ## The WebGPU default context
