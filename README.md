@@ -1,3 +1,5 @@
+![Caldrix](https://caldrix.ai/brand/caldrix-banner.png)
+
 # caldrix
 
 caldrix runs and serves language models with the Inferno compiler. It is one binary: `caldrix run` chats with a model in your terminal, `caldrix serve` starts an OpenAI-compatible HTTP server, and `caldrix doctor` tells you what your machine can run.
