@@ -128,13 +128,13 @@ Every refusal caldrix prints, with its cause and its fix. Each quoted message is
 
 ### The repo's `tokenizer.model` is refused
 
-> `which inferno does not convert yet`
-
 > `which inferno cannot reproduce exactly`
 
-**Cause.** The repo has no `tokenizer.json`, and its SentencePiece `tokenizer.model` is a kind inferno
-does not read yet, or sets an option inferno cannot reproduce exactly; the message names which. A
-download reads `the repo has no tokenizer.json, and …` and stops right after `config.json`, so
+> `which inferno does not convert`
+
+**Cause.** The repo has no `tokenizer.json`, and its SentencePiece `tokenizer.model` sets an option
+inferno cannot reproduce exactly, or is a model type other than BPE or Unigram; the message names
+which. A download reads `the repo has no tokenizer.json, and …` and stops right after `config.json`, so
 nothing else was downloaded. A model read from disk (a local directory, the cache when offline,
 `inferno-serve --model-dir`) and the browser read `the model has no tokenizer.json, and …`; the
 browser names the repo first and refuses before the first weight file.
