@@ -99,7 +99,7 @@ lane chosen, before any download starts.
 `--draft-model` names a small model that guesses tokens ahead of the main one; the main model checks the
 guesses, and a greedy reply is the same tokens plain decoding gives. It works on a lane that can check a draft:
 `caldrix doctor` prints `speculation=yes` or `speculation=no` on each lane line ([doctor.md](doctor.md)), and
-today only `cpu` says `yes`. On another lane the flag is not used, and stderr says why.
+today `cpu` and `hip` say `yes`. On another lane the flag is not used, and stderr says why.
 
 - Before any download, a draft the model index describes must pass the architecture gate and, when the index
   also holds the main model, fit beside it: in memory with both models resident, and on disk, where the draft's
@@ -111,8 +111,8 @@ today only `cpu` says `yes`. On another lane the flag is not used, and stderr sa
   be fetched, whose tokenizer differs, or that fails to load is not replaced. None of this stops the run:
   stderr names the draft and why, and the run speculates with n-gram lookup (guesses taken from the text
   already in the conversation) instead.
-- Without `--draft-model`, `caldrix` chooses a draft by itself from the model index only on the AMD lane, and
-  only once that lane can check a draft, which it cannot yet; today a draft is used only when you name it. `caldrix models drafts <repo>` lists the candidates the index knows ([models.md](models.md)).
+- Without `--draft-model`, `caldrix` chooses a draft by itself from the model index only on the AMD lane, which
+  can check a draft; on the `cpu` lane a draft is used only when you name it. `caldrix models drafts <repo>` lists the candidates the index knows ([models.md](models.md)).
 - A suggested draft that was turned off on this machine in an earlier run is not tried again for the same
   model. A draft you name with `--draft-model` is still tried, and stderr says it lost last time.
 - Speculation runs one request at a time, so `--max-batch` other than `1` leaves it off; `--weight-budget`

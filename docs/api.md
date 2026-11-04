@@ -86,7 +86,7 @@ guesses against the loaded model; greedy output is the same tokens plain decodin
   `--draft-tokens <1..=8>` fixes the draft length (absent: tuned live); `--ngram <min>:<max>` sets the
   lookup's suffix lengths (default `2:4`); `--speculation-memory <path>` keeps the tuner's state between runs.
 - An explicit mode is refused at start by name when the server is batched (`restart with --max-batch 1`), on a
-  backend that cannot verify a draft (only `cpu` today), or with `--weight-budget`; `auto` turns itself off with a note.
+  backend that cannot verify a draft (`cpu` and `hip` can), or with `--weight-budget`; `auto` turns itself off with a note.
 - Under `auto`, a draft that fails to load gives way to n-gram lookup with a note, and `--speculation-memory`
   is then neither read nor written, since it holds the draft's state.
 - A sampled request carrying a seed (its own `seed`, or the server's `--seed`) and a request decoded under a

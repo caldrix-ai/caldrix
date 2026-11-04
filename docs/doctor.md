@@ -40,7 +40,7 @@ no kernel was launched; `caldrix run` is what shows a lane works
   with `--backend auto` (the default) take the first usable lane.
 - **`speculation=yes` or `speculation=no`** ends each lane line: whether the lane can check a draft model's
   guesses, so `--draft-model` can speculate there ([run.md](run.md#speculative-decoding)). It reports what the
-  build supports, not a measurement; today only `cpu` says `yes`.
+  build supports, not a measurement; today `cpu` and `hip` say `yes`.
 - **`not supported`** always lists what Inferno does not run, and where Qwen3.5 (`Qwen3_5ForCausalLM`) runs:
   `caldrix` runs it on the `cpu` lane only ([models.md](models.md#aliases)). When a device under `/sys/class/drm`
   reports NVIDIA's vendor id, an extra line says an NVIDIA device is present and not supported.
