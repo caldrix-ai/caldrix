@@ -42,6 +42,7 @@ below name. As the package's declarations have them:
 ```ts
 class Caldrix {
   static load(model: string, opts?: LoadOptions): Promise<Engine>;
+  static check(model: string, opts?: CheckOptions): Promise<CheckResult>;
 }
 class Engine {
   chat(messages: ChatMessage[], opts?: GenerateOptions): AsyncIterable<Delta>;
@@ -153,11 +154,46 @@ interface LoadOptions {
   and the load rejects with `fetch`; after the load resolves the signal is ignored.
 - **`assets`**: where the package's own files come from; see [Network](#network).
 
+## Checking a model before loading it
+
+```ts
+type CheckOptions = Pick<LoadOptions, "backend" | "dtype" | "maxContext" | "storage" | "hubBaseUrl" | "signal" | "assets">;
+type CheckResult = { ok: true; backend: "webgpu" | "wasm" } | { ok: false; kind: Kind; message: string };
+
+const r = await Caldrix.check("smollm2-instruct");
+if (r.ok) console.log(`a load would run on ${r.backend}`);
+else if (r.kind !== "fetch") console.log(`a load would be refused: ${r.message}`);
+```
+
+`Caldrix.check` says which tier a load of the model would end on in this tab, or why the load would
+be refused, without loading it. It takes the same model and the same tier-deciding options as `load`,
+and `assets`, so it starts the same worker and `.wasm` the load would, under the same fallback rule;
+it runs the same option checks, the same probe and the same tier choice. Its worker then runs the
+load only until the tier is settled: for a repo id the Hub listing (for a LoRA adapter repo, its
+`adapter_config.json` and its base's Hub listing too), then `config.json` and the safetensors index
+(for a GGUF alias, the file's header range instead), the same precheck as `load`, and on the WebGPU
+tier the device open, after which the device is destroyed and the worker ends. It never fetches a
+tokenizer file or a weight, sends no `onProgress` events, and is never `offline`.
+
+Under `backend: "auto"` the answer is the tier the load would end on: a WebGPU refusal of the kinds
+`load` falls back on (a limit, a larger explicit context, a device that fails to open) answers
+`{ ok: true, backend: "wasm" }`, and a bf16 request answers wasm as `load` places it. An explicit
+`"webgpu"` or `"wasm"` answers that tier or its refusal.
+
+`check` never rejects. Every refusal is `{ ok: false, kind, message }`, with the kind and message
+`load` would give: an option it refuses (an unknown backend, a `hubBaseUrl` that is not an absolute
+http(s) URL, an empty model, `storage: "f32"` with `backend: "wasm"`) is `request`, a model past this
+tab's limits is `fit`, and a worker that cannot start or answers out of protocol is `backend`.
+`kind: "fetch"` means the answer is unknown: a file could not be fetched, or the check was aborted
+through `signal` (`checking <model> was aborted`), so a load might still succeed. The CDN fallback
+for the package's own files applies as on a load (off with `assets.fallback: false`), warned once per check on
+the console. The files a check fetches are written to the cache, and a later load reuses them.
+
 ## What has run, and where
 
 Only these runs are recorded (the browser-gate record: entries 5, 8 and 9 in the browser, and for the
 quantized aliases entries 10 and 11 off-browser and entries 12 and 14 in the browser, and for the adapter and
-nf4 repos entry 16 off-browser and entry 17 in the browser); nothing else is claimed.
+nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.check` entry 20 in the browser, and for the Try page entry 21 in the browser); nothing else is claimed.
 
 - **Model:** SmolLM2-135M-Instruct, one prompt, 8 greedy tokens; the adapter and nf4 repos below add a
   LoRA adapter over it and SmolLM2-360M-Instruct's nf4 repo, on their fixtures' prompt. No other model or prompt.
@@ -178,10 +214,15 @@ nf4 repos entry 16 off-browser and entry 17 in the browser); nothing else is cla
   5.874168e-4 against the same bound.
 - quantized aliases: off-browser at the desk on both tiers (the browser-gate record, entries 10 and 11); in headless Chromium through `Caldrix.load` on both tiers on the pinned files, WebGPU on Dawn/SwiftShader, a CPU (entry 12); on the operator's Mac through `Caldrix.load` on both tiers, WebGPU on the Mac's own adapter, vendor `apple`, architecture `metal-3`, token-exact (entry 14).
 - adapter and nf4 repos by id (a LoRA adapter over SmolLM2-135M-Instruct, and SmolLM2-360M-Instruct's bitsandbytes nf4 repo, each at a pinned sha): off-browser at the desk on both tiers (the browser-gate record, entry 16: wasm both pairs and WebGPU the LoRA pair token-exact, the f32 plan at f32 weight storage; the WebGPU nf4 pair stopped at lavapipe's storage-buffer binding limit); in headless Chromium through `Caldrix.load` by repo id on both tiers, both pairs token-exact, the f32 plan at f32 weight storage, WebGPU on Dawn/SwiftShader, a CPU (entry 17).
-- **Not run:** any other WebGPU adapter or GPU; a headed browser; the scalar (non-SIMD) wasm build in a
+- `Caldrix.check`: in headless Chromium against the loopback hub (the browser-gate record, entry 20): on a repo id, check and load agreed on the wasm tier and, with WebGPU enabled in the browser, on the WebGPU tier on Dawn/SwiftShader, a CPU, and the check fetched no tokenizer file and no weight; an index past the wasm ceiling checked as `fit`, an unknown repo id as `fetch`.
+- the website's Try page: in Brave on an Apple M1 Max, headed, every model on its list loaded by repo id from the real Hub on the WebGPU tier, answered one chat message and ran the agent's first chip, as the operator reported it (entry 21).
+- **Not run:** any other WebGPU adapter or GPU; the WebAssembly tier in a headed browser;
+  the scalar (non-SIMD) wasm build in a
   browser; real-Hub digest behaviour (the runs used a loopback Hub stand-in); a real Hub listing for a repo id
-  (the loopback hub served the pinned snapshots); any browser other than
-  Playwright's headless Chromium; any other model. No performance figure is recorded or claimed.
+  (the loopback hub served the pinned snapshots) beyond the Try page's own loads (entry 21); any browser other than
+  Playwright's Chromium and Brave (entry 21); any model beyond SmolLM2-135M-Instruct and the ones in entries 12, 16, 17, 18, 19 and 21;
+  `Caldrix.check` against a real adapter's buffer limit (its unit tests only), against the real Hub, or in any other
+  browser or on any other device. No performance figure is recorded or claimed.
 
 ## The WebGPU default context
 
