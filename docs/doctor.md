@@ -11,7 +11,7 @@ caldrix doctor
 ```
 
 On a Linux x86-64 machine without an AMD GPU, the v0.1.0 release installed with `install.sh`
-printed the output below, with one change: its `not supported` line is shown as the current binary
+printed the output below, with one change: its `not supported` block is shown as the current binary
 prints it, not as v0.1.0 did. Later versions print more than this capture shows: an `index` section
 and an `ollama cache` section before `not supported`, and each lane's capability vector (`features=`
 on `cpu` and `hip`, `family=` and `simdgroup_bf16=` on `metal`).
@@ -25,7 +25,8 @@ lanes
   cpu    usable  x86-64-v3 (12 physical cores, cgroup quota 8); cc at /usr/bin/cc; libm glibc 2.41; speculation=yes
 
 not supported
-  Inferno runs quantized GGUF (Q4_K_M, Q8_0) on the metal and hip lanes and on the cpu lane (a desk reading, not a run); quantized safetensors checkpoints and NVIDIA GPUs are not supported
+  Inferno runs quantized GGUF (Q4_K_M, Q8_0) on the metal and hip lanes and on the cpu lane (a desk reading, not a run); quantized safetensors checkpoints other than bitsandbytes nf4 (densified at fetch) and NVIDIA GPUs are not supported
+  Inferno runs Qwen3.5 on the cpu lane only (x86-64-v3; a desk reading, not a run); the hip lane refuses it, though its token gates ran on one MI300X, and the metal lane refuses it, where nothing has run it
 
 no kernel was launched; `caldrix run` is what shows a lane works
 ```
@@ -40,7 +41,8 @@ no kernel was launched; `caldrix run` is what shows a lane works
 - **`speculation=yes` or `speculation=no`** ends each lane line: whether the lane can check a draft model's
   guesses, so `--draft-model` can speculate there ([run.md](run.md#speculative-decoding)). It reports what the
   build supports, not a measurement; today only `cpu` says `yes`.
-- **`not supported`** always lists what Inferno does not run. When a device under `/sys/class/drm`
+- **`not supported`** always lists what Inferno does not run, and where Qwen3.5 (`Qwen3_5ForCausalLM`) runs:
+  `caldrix` runs it on the `cpu` lane only ([models.md](models.md#aliases)). When a device under `/sys/class/drm`
   reports NVIDIA's vendor id, an extra line says an NVIDIA device is present and not supported.
 - **The last line** is a reminder: the report comes from probes, and only `caldrix run` shows a lane
   actually works.

@@ -22,7 +22,8 @@ The model comes first; flags follow it.
    `*.safetensors`. An existing directory
    always wins. An argument starting with `./`, `/` or `~` that is not a directory is refused as
    `no such directory`.
-2. **An alias**: `smollm2`, `smollm2-instruct` (from v0.1.2), `llama-8b` or `qwen3-0.6b`, each a Hugging Face repo
+2. **An alias**: `smollm2`, `smollm2-instruct` (from v0.1.2), `llama-8b`, `qwen3-0.6b`, `qwen3-8b`,
+   `qwen3-30b-a3b` or `decider-0.8b`, each a Hugging Face repo
    pinned to a revision ([models.md](models.md)).
 3. **A Hugging Face repo id**, `owner/name` or `owner/name@revision`. Without `@revision` it is `main`.
 

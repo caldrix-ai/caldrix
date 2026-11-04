@@ -27,16 +27,20 @@ not been verified is listed as not verified on hardware; everything else is not 
 Release archives are built for `x86_64-linux` (glibc 2.38 or newer) and, from v0.1.1, `aarch64-darwin`
 (macOS 14.0 or newer on Apple silicon). The installer refuses any other platform.
 
-Models: the import accepts checkpoints of five architectures (`LlamaForCausalLM`,
-`MistralForCausalLM`, `Qwen2ForCausalLM`, `Qwen3ForCausalLM` and the mixture-of-experts
-`Qwen3MoeForCausalLM`) in safetensors, bf16 or f32. Mistral is accepted by the import but has not been
-verified on hardware. Five aliases name the models Inferno has run on hardware, each pinned to a revision:
-`smollm2`, `smollm2-instruct`, `llama-8b`, `qwen3-0.6b` and `qwen3-30b-a3b` ([models.md](models.md));
+Models: the import accepts checkpoints of six architectures (`LlamaForCausalLM`,
+`MistralForCausalLM`, `Qwen2ForCausalLM`, `Qwen3ForCausalLM`, the mixture-of-experts
+`Qwen3MoeForCausalLM` and Qwen3.5's `Qwen3_5ForCausalLM`, with `Qwen3_5ForConditionalGeneration` as text
+only) in safetensors, bf16 or f32. Mistral is accepted by the import but has not been verified on hardware.
+Aliases name the models Inferno has run on hardware, each pinned to a revision: `smollm2`,
+`smollm2-instruct`, `llama-8b`, `qwen3-0.6b`, `qwen3-30b-a3b` and `decider-0.8b` ([models.md](models.md));
 `smollm2-instruct` (from v0.1.2) is verified on the CPU lane (x86-64-v3), not on Metal or AMD GPUs: its
 tokens on a plain-text prompt; its chat template is not exercised by any gate. `qwen3-30b-a3b` is verified
 by its token gates on one MI300X (resident), one M1 Max streamed under a 56 GiB `--weight-budget`, and
 the CPU lane (x86-64-v3) streamed under a 20 GiB budget ([models.md](models.md)).
-Quantized: Ollama Q4_K_M and Q8_0 tags on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); the `hip` lane compiles them and has not run them on an AMD device ([models.md](models.md#ollama-tags)); quantized safetensors checkpoints are not supported.
+`decider-0.8b` (Qwen3.5) is a decision model, not a chat model; its token gates and the Qwen3.5 base
+model's ran at the desk on the CPU lane (x86-64-v3) and on one MI300X, and `caldrix` runs Qwen3.5 on the
+`cpu` lane only: the `hip` and `metal` lanes refuse it, and nothing has run it on Metal ([models.md](models.md)).
+Quantized: Ollama Q4_K_M and Q8_0 tags on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); on the `hip` lane, five tags were token-exact in f32 on one MI300X ([models.md](models.md#ollama-tags)); quantized safetensors checkpoints are not supported.
 
 Generation is greedy unless asked: `--temperature`, `--top-k`, `--top-p`, `--min-p`, `--repetition-penalty`
 and `--seed` turn sampling on, and the chat changes them with `/temperature` and its siblings

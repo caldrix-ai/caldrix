@@ -153,9 +153,9 @@ browser names the repo first and refuses before the first weight file.
 
 > `nothing else was downloaded`
 
-**Cause.** The import checks `config.json` before anything else. The architecture is not `LlamaForCausalLM`, `MistralForCausalLM`, `Qwen2ForCausalLM` or `Qwen3ForCausalLM`, or `config.json` declares more than one; the `torch_dtype` is f16; or an attention bias is set on an architecture that has none. For a Hub model the message ends by saying nothing else was downloaded.
+**Cause.** The import checks `config.json` before anything else. The architecture is not `LlamaForCausalLM`, `MistralForCausalLM`, `Qwen2ForCausalLM`, `Qwen3ForCausalLM`, `Qwen3MoeForCausalLM`, `Qwen3_5ForCausalLM` or `Qwen3_5ForConditionalGeneration`, or `config.json` declares more than one; the `torch_dtype` is f16; or an attention bias is set on an architecture that has none. For a Hub model the message ends by saying nothing else was downloaded.
 
-**Fix.** Use a model in one of the four supported architectures, stored in bf16 or f32. The full list of what the import refuses is in [models.md](models.md#what-the-import-refuses).
+**Fix.** Use a model in one of the supported architectures, stored in bf16 or f32. The full list of what the import refuses is in [models.md](models.md#what-the-import-refuses).
 
 ### The download did not finish
 

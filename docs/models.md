@@ -2,10 +2,12 @@
 
 `caldrix run` and `caldrix serve` take a model as a directory, an alias or a Hugging Face repo id; an alias
 or a repo id is downloaded into the standard Hugging Face cache and read from there after. The import
-accepts dense Llama, Mistral, Qwen2 and Qwen3 checkpoints and the Qwen3 mixture-of-experts architecture
-(`Qwen3MoeForCausalLM`) in safetensors, bf16 or f32; quantized safetensors checkpoints are refused. Quantized Ollama tags (Q4_K_M and
-Q8_0) run on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); the `hip` lane compiles
-them and has not run them on an AMD device ([Ollama tags](#ollama-tags)). Mistral is accepted
+accepts dense Llama, Mistral, Qwen2 and Qwen3 checkpoints, the Qwen3 mixture-of-experts architecture
+(`Qwen3MoeForCausalLM`) and Qwen3.5 (`Qwen3_5ForCausalLM`, and `Qwen3_5ForConditionalGeneration` as text
+only) in safetensors, bf16 or f32; quantized safetensors checkpoints are refused. Qwen3.5 runs on the `cpu`
+lane only ([Aliases](#aliases)). Quantized Ollama tags (Q4_K_M and
+Q8_0) run on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); on the `hip` lane five
+tags were token-exact in f32 on one MI300X ([Ollama tags](#ollama-tags)). Mistral is accepted
 by the import but has not been verified on hardware.
 
 ## Aliases
@@ -17,7 +19,13 @@ checkpoint) is verified by its token gates — eight greedy tokens of one prompt
 on one AMD MI300X with every expert resident, on one Apple M1 Max (64 GiB) streamed under a 56 GiB
 `--weight-budget`, and on the CPU lane (x86-64-v3) streamed under a 20 GiB budget; without a budget the
 Metal and CPU lanes load every expert resident, which no run has exercised at this size, and `--max-batch`
-above 1 is refused for it.
+above 1 is refused for it. `decider-0.8b` (Qwen3.5, `Qwen3_5ForCausalLM`) is a decision model, not a chat
+model. It and `Qwen/Qwen3.5-0.8B-Base` are verified by their token gates — eight greedy tokens of one prompt
+in f32 and in bf16, and of a 1,100-token prompt, against the PyTorch reference — at the desk on the CPU lane
+(x86-64-v3) and on the AMD lane on one MI300X. `caldrix` runs Qwen3.5 on the
+`cpu` lane only: the `hip` and `metal` lanes refuse it by name, as the browser does, and nothing has run it
+on Metal. `caldrix run` itself has not been exercised on it; `--max-batch` above 1 and `--weight-budget`
+are refused for it.
 
 | Alias | Hugging Face repo | Revision |
 | --- | --- | --- |
@@ -26,6 +34,7 @@ above 1 is refused for it.
 | `llama-8b` | `deepseek-ai/DeepSeek-R1-Distill-Llama-8B` | `6a6f4aa4197940add57724a7707d069478df56b1` |
 | `qwen3-0.6b` | `Qwen/Qwen3-0.6B` | `c1899de289a04d12100db370d81485cdf75e47ca` |
 | `qwen3-30b-a3b` | `Qwen/Qwen3-30B-A3B` | `ad44e777bcd18fa416d9da3bd8f70d33ebb85d39` |
+| `decider-0.8b` | `Mapika/decider-0.8b` | `a0a01d6f8135298f400a8c856b355793012ae971` |
 
 ## Ollama tags
 
@@ -47,7 +56,9 @@ A Q4_K_M or Q8_0 tag is read and sized before any download. It runs at an f32 pl
   one machine — a desk reading, not a run.
 - `hip`: the lane compiles quantized tags and holds a quantized model to one request at a time
   (`--max-batch` lowers from 8 to 1 with a startup line, and an explicit `--max-batch 8` is refused by
-  name); nothing quantized has run on an AMD device.
+  name). On one MI300X, `smollm2:135m-instruct-q4_K_M`, `smollm2:135m-instruct-q8_0`,
+  `qwen2.5:0.5b-instruct-q4_K_M`, `qwen2.5:0.5b-instruct-q8_0` and `deepseek-r1:8b-llama-distill-q4_K_M`
+  were token-exact in f32 by their token gates (eight greedy tokens of one prompt each).
 
 Quantized safetensors checkpoints stay refused ([What the import refuses](#what-the-import-refuses)).
 
@@ -138,18 +149,22 @@ A gated repo needs its terms accepted on the Hub with your account, then `HF_TOK
 ## What the import refuses
 
 `config.json` must declare exactly one architecture, one of `LlamaForCausalLM`, `MistralForCausalLM`,
-`Qwen2ForCausalLM` and `Qwen3ForCausalLM` (`MistralForCausalLM` is accepted, not verified on hardware). Every other architecture is refused by name, which covers MoE
-models. Within those four, the import refuses:
+`Qwen2ForCausalLM`, `Qwen3ForCausalLM`, `Qwen3MoeForCausalLM`, `Qwen3_5ForCausalLM` and
+`Qwen3_5ForConditionalGeneration` (text only) (`MistralForCausalLM` is accepted, not verified on hardware).
+Every other architecture is refused by name. Within those, the import refuses:
 
 - a `torch_dtype` other than bf16 or f32 (f16 is refused by name), and any tensor stored as a type other
   than f32, f16 or bf16, which covers quantized checkpoints;
-- any tensor the architecture does not use, since the compiler would ignore it;
+- any tensor the architecture does not use, since the compiler would ignore it (Qwen3.5's
+  multi-token-prediction tensors, `mtp.*`, and the vision tower, `model.visual.*`, are skipped by name and
+  never read);
 - an activation other than SiLU, an MLP bias, an attention bias outside Qwen2, interleaved RoPE, and any `rope_scaling` other than Llama 3's (Llama 3's is applied to the RoPE table in
   code, and a line says so at load; the Metal lane has read a scaled table on hardware, token-exact with
   the scaling taken from a `config.json` and from a GGUF's `rope_freqs.weight`, in a run on an Apple M1
   Max, the AMD lane likewise in a run on an MI300X, and the CPU lane at the desk on the 1B — a desk
   reading, not a run; the verification files say what has run);
-- dimensions out of bounds or inconsistent with each other.
+- dimensions out of bounds or inconsistent with each other;
+- for Qwen3.5, any `config.json` key outside the set it reads, and an active sliding window.
 
 Each refusal names the field and the value. For a model from the Hub, the refusal comes after
 `config.json` alone and says nothing else was downloaded.
