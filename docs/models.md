@@ -81,8 +81,10 @@ checkpoints are not drafts in this release. When an earlier run on this machine 
 `last run on this machine: <draft> was turned off` or `<draft> stayed on` follows, with no figure
 ([run.md](run.md#speculative-decoding)).
 
-`--json` prints the result as JSON. `caldrix models update` asks for the index again, even after a failed
-update.
+`--json` prints the result as JSON. A fractional number the index stores at 32-bit precision, such as an
+adapter's `lora_alpha` in `caldrix models info --json`'s `entry`, is printed as the shortest decimal that
+reads back to that 32-bit value (`0.1`, not `0.10000000149011612`). `caldrix models update` asks for the index again, even
+after a failed update.
 
 ## Repo ids and revisions
 

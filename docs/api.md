@@ -170,8 +170,9 @@ curl http://localhost:8425/v1/systemone \
 {"model":"Qwen/Qwen3-0.6B","answers":{"team":{"type":"choice","choice":"billing","probabilities":{"billing":0.9976708292961121,"shipping":0.0021615091245621443,"technical":0.00016766643966548145},"confidence":0.9965062439441681},"angry":{"type":"noul","noul":0.981803297996521},"urgency":{"type":"score","score":0.10968978330492973,"legend":{"0":"not urgent","1":"somewhat urgent","2":"very urgent"},"probabilities":{"0":0.9140376448631287,"1":0.06223498284816742,"2":0.023727400228381157},"confidence":0.8354653250426054}},"usage":{"input_tokens":204,"output_tokens":0}}
 ```
 
-Answers are read zero-shot from the loaded chat model and are only as good as that model; a trained
-decision model is the planned next step. The answers above are this small model's own.
+Answers are read zero-shot from the loaded chat model and are only as good as that model. The answers
+above are this small model's own. A trained decision model answers in its own format instead
+([the decider reading](#the-decider-reading)).
 
 The request:
 
@@ -185,16 +186,22 @@ The request:
 - `instructions` is optional on every question: a string, an object, an array or `null`.
 - An object or array in `state`, `instructions`, a description or a level is written into the prompt as
   compact JSON: keys in the order received, no space after `,` or `:`. A server that writes it with
-  spaces sends the model a different prompt, so its probabilities can differ from these; number
-  formatting inside it (for example `1e-05` against `0.00001`) can differ too. An integer beyond 64 bits is
-  written into the prompt as a floating-point number.
+  spaces sends the model a different prompt, so its probabilities can differ from these. Numbers are
+  written in one canonical form, not as the request spelled them: an integer exactly, at any size; any number
+  with a `.`, `e` or `E` as the shortest decimal that reads back to the same 64-bit float, positional for
+  exponents from -4 to 15 and otherwise with a signed exponent of at least two digits (`0.00001` is written
+  `1e-05`, `1e16` is written `1e+16`); a whole number written this way keeps its fractional part (`2.0`,
+  never `2`).
 
 The response:
 
 - `choice`: the chosen option, its `probabilities` by option name and a `confidence`,
   `max(0, (p_best - 1/n) / (1 - 1/n))` (`1` with one option).
 - `score`: the expected level `score` (the sum of `i * p_i`), the `legend`, the `probabilities` by level
-  index and a `confidence` from the spread around the most likely level (`1` with one level).
+  index and a `confidence` from the spread around the most likely level (`1` with one level). The `legend`
+  echoes each level as the request gave it, and a number inside a level keeps the request's digits:
+  `1.50` is echoed `1.50` and `1e-05` is echoed `1e-05`, not `1.5` and `1e-5` as a 64-bit float would
+  write them, and an integer is exact at any size.
 - `noul`: the probability of yes.
 - An exact tie takes the first option. `usage.input_tokens` is the sum of every question's prompt tokens;
   `output_tokens` is `0`.
@@ -224,6 +231,65 @@ requests can run between them. A full queue answers `429` (`the request queue is
 request, even when earlier questions of it have already run; their work is discarded and no answer is
 returned. `503` (`the engine is unavailable`) means the engine has stopped, and `500` means the engine
 failed on a question or gave no usable reading for it.
+
+### The decider reading
+
+A model directory that holds a `decider_config.json` beside its weights is a decider, a model trained to
+answer these questions, and `/v1/systemone` reads it in its own trained format instead of the zero-shot one.
+`caldrix` fetches the file with the model when the repository has one, as `decider-0.8b`'s does
+([models.md](models.md)). The file is read once, when the model loads, and checked strictly: an unknown key,
+a missing `temperature` or `neutralize_none`, or a form this release does not build (`neutralize_none:
+true`, `schema_first: true`, a chat layout, images) stops the load with a message naming the key; a file
+over 64 KiB stops it with a message naming the file and the limit. The request and the response keep the
+shape described above; what changes is how each answer is read.
+
+- **The prompt.** No chat template is used. Each prompt is `Context:` and the state, then one question with
+  its options and labels, then `Answer: (`, assembled from token ids exactly as decider's own package
+  builds them. A state, instructions, description or level that is an object or an array is written as JSON with a space
+  after `,` and `:`, and inside the state a list of 8 or more elements carries each element's position as
+  `_index`.
+- **The labels.** Options are labelled `A` to `Z`, then the two-letter labels `AA`, `AB`, … that are one
+  token each in the model's vocabulary, 255 labels in all. A `noul` question reads two options, `no` and `yes`.
+- **The temperature.** The probabilities are a softmax of the label logits divided by the config's
+  `temperature`.
+- **Levels asked one at a time.** When the config sets `isolated_levels`, each level of a `score` question is
+  asked as its own yes-or-no question about that level (a leading level number such as `2: ` is left out of
+  it), and level `i`'s probability is its yes probability over the sum of all the levels' yes probabilities.
+  Otherwise all levels are options of one question.
+- **The answer.** `choice`, `score`, `noul` and `confidence` are computed as above. The values are not
+  rounded (decider's own package rounds them), and `model` is the served name.
+
+The limits differ from the zero-shot reading. The refusals of these four start with
+`this model is a decider: `:
+
+- `questions`: 1 to 64.
+- `choice`: 2 options up to the config's `max_options` (at most 255).
+- `score`: 2 to 10 levels.
+- `instructions` is required on `choice` and `score` questions and may not be `null` or `""`; a `noul` question
+  without instructions needs `criteria` describing at least one of `true` and `false`.
+
+These size limits refuse with their own messages, which name the counts and carry no such prefix:
+
+- **The state cap.** A state longer than the config's `max_state_tokens` (32768 when the config does not
+  set it) is a `400` naming both counts. A state whose text is too long to fit the cap even at the
+  vocabulary's longest token per token is refused before it is tokenized, and its count is then a lower
+  bound (`the state is at least … tokens`) for text the tokenizer's normalization does not shrink. decider's own package cuts such a state short without saying
+  so; this server refuses it instead, so an answer is never read from part of the state.
+- Every prompt must leave room for the one read step under the compiled context, and the prompts of one
+  request together must not exceed 64 times the compiled context.
+
+The state is read once per request. The first prompt also keeps the model's state at the end of the state's
+tokens, and every later prompt of the request starts from that point, so only its question is read again.
+`usage.input_tokens` counts the tokens actually read: the state once plus each prompt's question. A request
+with one prompt, or one whose kept state could not be taken, reads every prompt whole and counts every
+prompt whole. The kept state belongs to the request and is dropped with the response.
+
+The prompts run one at a time, in order, each through the server's request queue, as the questions do
+above: other requests can run between them, and a full queue answers `429` for the whole request. A `500`
+also means the reading gave a probability that is not a finite number.
+
+`decider-0.8b` is a Qwen3.5 model, which this server runs on the CPU lane only ([models.md](models.md)),
+with `--max-batch 1` as above.
 
 ## Not implemented
 
