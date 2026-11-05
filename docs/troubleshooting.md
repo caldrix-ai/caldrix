@@ -118,22 +118,28 @@ Every refusal caldrix prints, with its cause and its fix. Each quoted message is
 
 ### The repo is missing files
 
-> `inferno needs config.json, a tokenizer (tokenizer.json, or a SentencePiece tokenizer.model) and *.safetensors`
+> `inferno needs config.json, a supported tokenizer and *.safetensors`
 
 > `the repo has no *.safetensors; inferno reads safetensors only`
 
-**Cause.** The repo lacks `config.json`, a tokenizer (`tokenizer.json`, or a SentencePiece `tokenizer.model`) or any `*.safetensors` file. GGUF, `.bin` and other formats are not read.
+**Cause.** The repo lacks `config.json`, a supported tokenizer (the [models page](models.md#what-is-downloaded) lists the files) or any `*.safetensors` file. GGUF, `.bin` and other formats are not read.
 
 **Fix.** Use a repo that publishes safetensors with a tokenizer ([models.md](models.md#what-is-downloaded)).
 
-### The repo's `tokenizer.model` is refused
+### The repo's tokenizer files are refused
 
 > `which inferno cannot reproduce exactly`
 
 > `which inferno does not convert`
 
-**Cause.** The repo has no `tokenizer.json`, and its SentencePiece `tokenizer.model` sets an option
-inferno cannot reproduce exactly, or is a model type other than BPE or Unigram; the message names
+> `whose vocab.json and merges.txt inferno`
+
+> `which is not in vocab.json`
+
+> `inferno does not guess which the model was trained with`
+
+**Cause.** The repo has no `tokenizer.json`, and its other tokenizer files set an option or have a
+shape inferno cannot reproduce exactly, or are a kind inferno does not convert; the message names
 which. A download reads `the repo has no tokenizer.json, and …` and stops right after `config.json`, so
 nothing else was downloaded. A model read from disk (a local directory, the cache when offline,
 `inferno-serve --model-dir`) and the browser read `the model has no tokenizer.json, and …`; the

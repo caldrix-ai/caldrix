@@ -18,7 +18,7 @@ The model comes first; flags follow it.
 
 `<model>` is one of, checked in this order:
 
-1. **A directory** holding `config.json`, a tokenizer (`tokenizer.json` or `tokenizer.model`) and
+1. **A directory** holding `config.json`, a supported tokenizer ([the models page](models.md#what-is-downloaded) lists them) and
    `*.safetensors`. An existing directory
    always wins. An argument starting with `./`, `/` or `~` that is not a directory is refused as
    `no such directory`.
