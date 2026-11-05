@@ -43,6 +43,7 @@ below name. As the package's declarations have them:
 class Caldrix {
   static load(model: string, opts?: LoadOptions): Promise<Engine>;
   static check(model: string, opts?: CheckOptions): Promise<CheckResult>;
+  static fit(facts: QuantFacts, opts?: FitOptions): Promise<FitResult>;
 }
 class Engine {
   chat(messages: ChatMessage[], opts?: GenerateOptions): AsyncIterable<Delta>;
@@ -199,11 +200,51 @@ through `signal` (`checking <model> was aborted`), so a load might still succeed
 for the package's own files applies as on a load (off with `assets.fallback: false`), warned once per check on
 the console. The files a check fetches are written to the cache, and a later load reuses them.
 
+## Fitting a GGUF file from its recorded facts
+
+```ts
+type FitOptions = Pick<CheckOptions, "backend" | "maxContext" | "signal" | "assets">;
+type FitResult = { ok: true; backend: "webgpu" | "wasm"; maxContext: number | null; contextClamp: NonNullable<DoctorReport["contextClamp"]> | null } | { ok: false; kind: Kind; message: string };
+
+// `facts` is a `QuantFacts`: what the nightly records for one GGUF file of a repo.
+const r = await Caldrix.fit(facts);
+if (r.ok) console.log(`a load would run on ${r.backend} at context ${r.maxContext}`);
+else if (r.kind !== "fetch") console.log(`a load would be refused: ${r.message}`);
+```
+
+`Caldrix.fit` says whether a GGUF file would load in this tab, on which tier and at what context,
+from the facts recorded for it (`QuantFacts`: the file's name, size and digest, its architecture and
+dimensions, the element count per tensor type, the base model (`base_model`), `general.file_type`, and the tensor table, each
+tensor's name, type and dims), and it fetches nothing: no Hub listing, no range and no file. It takes
+`check`'s tier and context options and `assets`, runs the same option checks, probe and tier choice,
+and in its worker the same precheck a load of the file runs, with the file's header replaced by the
+facts; on the WebGPU tier it opens the device and destroys it again, and under `backend: "auto"` a
+WebGPU refusal answers wasm as `check`'s does. `{ ok: true }` carries the tier, `maxContext` (the
+context a load would plan) and `contextClamp` (the clamp's line when the default context was
+clamped, else `null`), as a load's `doctor()` reports them.
+
+A caller holding a larger record (the nightly's `web-quants.json` entry, say) passes only these keys:
+an unknown key is refused as `validate`, so a page projects each entry onto them. `fit` answers the
+default weight storage for the tier; `FitOptions` has no `storage`, so a page that loads a dense file
+with `storage: "f32"` gets `fit`'s answer for the default storage (quantized files are unaffected).
+
+The tensor types `fit` admits are the ones this build runs: a tensor of any other type is
+`{ ok: false, kind: "architecture" }`, its name and type in the message. Facts that are not a plain
+object, or are past the size a fit takes once serialised, are `request`; facts the host refuses (an
+unknown or missing key, a table past the GGUF reader's caps) are `validate`; a file past this tab's
+limits is `fit`, and a worker that cannot start or answers out of protocol is `backend`. `fit` never rejects; `kind: "fetch"` (an abort through `signal`, `the fit was
+aborted`) leaves the answer unknown.
+
+A facts admit is never a load guarantee. `check` and `load` judge the file's own header at the commit
+the listing pins, and the facts cannot show what only the file holds: the values of
+`rope_freqs.weight`, a missing `attention.layer_norm_rms_epsilon`, or a tensor whose bytes or element
+count disagree with the table. Facts recorded from an older commit of a repo answer for that file.
+
 ## What has run, and where
 
 Only these runs are recorded (the browser-gate record: entries 5, 8 and 9 in the browser, and for the
 quantized aliases entries 10 and 11 off-browser and entries 12 and 14 in the browser, and for the adapter and
-nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.check` entry 20 in the browser, and for the Try page entry 21 in the browser, and for a GGUF file in a repo entry 22); nothing else is claimed.
+nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.check` entry 20 in the browser, and for the Try page entry 21 in the browser, and for a GGUF file in a repo entry 22, and for `Caldrix.fit` entry 24); nothing else is claimed.
 
 - **Model:** SmolLM2-135M-Instruct, one prompt, 8 greedy tokens; the adapter and nf4 repos below add a
   LoRA adapter over it and SmolLM2-360M-Instruct's nf4 repo, on their fixtures' prompt. No other model or prompt.
@@ -227,13 +268,14 @@ nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.che
 - `Caldrix.check`: in headless Chromium against the loopback hub (the browser-gate record, entry 20): on a repo id, check and load agreed on the wasm tier and, with WebGPU enabled in the browser, on the WebGPU tier on Dawn/SwiftShader, a CPU, and the check fetched no tokenizer file and no weight; an index past the wasm ceiling checked as `fit`, an unknown repo id as `fetch`.
 - the website's Try page: in Brave on an Apple M1 Max, headed, every model on its list loaded by repo id from the real Hub on the WebGPU tier, answered one chat message and ran the agent's first chip, as the operator reported it (entry 21).
 - a GGUF file in a repo by name (`file`): in headless Chromium through `Caldrix.load` against the loopback hub's tiny fixtures, on the wasm tier and on the WebGPU tier on Dawn/SwiftShader, a CPU, token-exact to the test harness's own tokens, with the name selecting the file, a digest mismatch refused as `digest`, and a header context past the wasm32 heap clamped and reported by `doctor`; off-browser, a rope-scaled quantized model token-exact on both tiers and the quantized row kernels past the grid dimension limit on lavapipe, a CPU (entry 22).
+- `Caldrix.fit`: in headless Chromium against the loopback hub's tiny fixtures, on the wasm tier and on the WebGPU tier on Dawn/SwiftShader, a CPU: the committed facts of the hub's Q8_0 file and of its long-context copy answered `ok` with the tier, and the `maxContext` and `contextClamp` a load of that file reported in `doctor()`, with no request to the hub; the facts with one tensor's type changed to one this build lacks answered `architecture` naming it; off-browser, the fit from facts equals the fit from the header on every tiny fixture (entry 24).
 - **Not run:** any real GGUF repo by id in a browser; Llama 3.2 or any model with a 128k vocabulary in a browser; a 2D-grid dispatch on a real adapter (the WebGPU row kernels past the grid dimension limit ran on lavapipe only); the WebGPU heap clamp in a browser; any other WebGPU adapter or GPU; the WebAssembly tier in a headed browser;
   the scalar (non-SIMD) wasm build in a
   browser; real-Hub digest behaviour (the runs used a loopback Hub stand-in); a real Hub listing for a repo id
   (the loopback hub served the pinned snapshots) beyond the Try page's own loads (entry 21); any browser other than
   Playwright's Chromium and Brave (entry 21); any model beyond SmolLM2-135M-Instruct and the ones in entries 12, 16, 17, 18, 19 and 21;
   `Caldrix.check` against a real adapter's buffer limit (its unit tests only), against the real Hub, or in any other
-  browser or on any other device. No performance figure is recorded or claimed.
+  browser or on any other device; `Caldrix.fit` on facts the nightly recorded for a real repo, or on a real adapter. No performance figure is recorded or claimed.
 
 ## The default context
 
