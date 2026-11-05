@@ -22,9 +22,9 @@ Metal and CPU lanes load every expert resident, which no run has exercised at th
 above 1 is refused for it. `decider-0.8b` (Qwen3.5, `Qwen3_5ForCausalLM`) is a decision model, not a chat
 model. It and `Qwen/Qwen3.5-0.8B-Base` are verified by their token gates — eight greedy tokens of one prompt
 in f32 and in bf16, and of a 1,100-token prompt, against the PyTorch reference — at the desk on the CPU lane
-(x86-64-v3) and on the AMD lane on one MI300X. `caldrix` runs Qwen3.5 on the
-`cpu` lane only: the `hip` and `metal` lanes refuse it by name, as the browser does, and nothing has run it
-on Metal. `caldrix run` itself has not been exercised on it; `--max-batch` above 1 and `--weight-budget`
+(x86-64-v3), on the AMD lane on one MI300X and on the Metal lane on one Apple M1 Max (64 GiB), through
+the engine. `caldrix` runs Qwen3.5 on the
+`cpu` lane only: the `hip` and `metal` lanes refuse it by name, as the browser does. `caldrix run` itself has not been exercised on it; `--max-batch` above 1 and `--weight-budget`
 are refused for it.
 
 | Alias | Hugging Face repo | Revision |

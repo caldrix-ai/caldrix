@@ -26,7 +26,7 @@ lanes
 
 not supported
   Inferno runs quantized GGUF (Q4_K_M, Q8_0) on the metal and hip lanes and on the cpu lane (a desk reading, not a run); quantized safetensors checkpoints other than bitsandbytes nf4 (densified at fetch) and NVIDIA GPUs are not supported
-  Inferno runs Qwen3.5 on the cpu lane only (x86-64-v3; a desk reading, not a run); the hip lane refuses it, though its token gates ran on one MI300X, and the metal lane refuses it, where nothing has run it
+  Inferno runs Qwen3.5 on the cpu lane only (x86-64-v3; a desk reading, not a run); the hip and metal lanes refuse it, though its token gates ran on one MI300X and on one Apple M1 Max
 
 no kernel was launched; `caldrix run` is what shows a lane works
 ```

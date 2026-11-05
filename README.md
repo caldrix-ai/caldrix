@@ -63,8 +63,9 @@ tokens on a plain-text prompt; its chat template is not exercised by any gate. `
 by its token gates on one MI300X (resident), one M1 Max streamed under a 56 GiB `--weight-budget`, and
 the CPU lane (x86-64-v3) streamed under a 20 GiB budget ([models.md](docs/models.md)).
 `decider-0.8b` (Qwen3.5) is a decision model, not a chat model; its token gates and the Qwen3.5 base
-model's ran at the desk on the CPU lane (x86-64-v3) and on one MI300X, and `caldrix` runs Qwen3.5 on the
-`cpu` lane only: the `hip` and `metal` lanes refuse it, and nothing has run it on Metal ([models.md](docs/models.md)).
+model's ran at the desk on the CPU lane (x86-64-v3), on one MI300X and on one Apple M1 Max (through the
+engine), and `caldrix` runs Qwen3.5 on the `cpu` lane only: the `hip` and `metal` lanes refuse it
+([models.md](docs/models.md)).
 Quantized: Ollama Q4_K_M and Q8_0 tags on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); on the `hip` lane, five tags were token-exact in f32 on one MI300X ([models.md](docs/models.md#ollama-tags)); quantized safetensors checkpoints are not supported.
 
 Generation is greedy unless asked: `--temperature`, `--top-k`, `--top-p`, `--min-p`, `--repetition-penalty`
