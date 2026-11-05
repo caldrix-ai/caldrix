@@ -58,7 +58,7 @@ function probe(): Promise<Capabilities>;
 - **`chat`** formats the messages with the model's chat template; **`complete`** continues a plain-text
   prompt, or a prompt given as token ids. Both yield deltas until one has `done: true`.
 - **`doctor()`** reports the load: the tier that runs (`backend`), `device`, `dtype`, `storage`,
-  `adapter`, on WebGPU only `maxContext` and `contextClamp`, where each model file came from and whether
+  `adapter`, `maxContext` and `contextClamp`, where each model file came from and whether
   its digest was checked (`source`), where the package's own files came from (`assets`: `bundle`, `cdn`
   or `page`, with the URL), `aliases` (every alias this build loads, each with its `name` and its
   `format`, `safetensors` or `gguf`), `provenance` (a densified load's `model:` line, `null` for a model read as it lies), `note` (an nf4 repo's 4-bit note, `null` otherwise), and `why` the tier was chosen.
@@ -121,6 +121,7 @@ interface LoadOptions {
   offline?: boolean;
   onProgress?: (p: { file: string; loaded: number; total: number | null; repo: string; revision: string; provenance?: string }) => void;
   hubBaseUrl?: string;
+  file?: string;
   dtype?: "f32" | "bf16";
   maxContext?: number;
   storage?: "auto" | "f32";
@@ -137,7 +138,8 @@ interface LoadOptions {
   `"auto"` is placed as any alias: WebGPU is probed first, and a refusal of the same kinds falls back to
   wasm.
 - **Quantized aliases**: `smollm2-instruct:q4_K_M` and `smollm2-instruct:q8_0` are one GGUF file each. A
-  load reads the file's header with a range request first, then verifies the whole file against the
+  load reads the file's header with a range request first (and `rope_freqs.weight`'s small extent as a second
+  range when it lies past the header), then verifies the whole file against the
   alias's pinned sha256 before parsing it. Both tiers have their kernels; on the WebGPU tier the weights
   stay in their blocks and `doctor().storage` is `"blocks"`. What has run with them is under "What has run, and where" below.
 - **`onProgress`**: called with each model file's progress: the file, the bytes loaded and the total
@@ -147,7 +149,14 @@ interface LoadOptions {
   adapter has `shader-f16`; `"f32"` keeps them f32 on any adapter. `storage: "f32"` on a quantized alias
   is satisfied: nothing is narrowed, and the weights stay in their blocks. `doctor().storage` reports it
   (`"blocks"` for a quantized alias, `null` on wasm). `storage: "f32"` with `backend: "wasm"` is refused.
-- **`maxContext`**: the context length to load at; see [the WebGPU default context](#the-webgpu-default-context).
+- **`maxContext`**: the context length to load at; see [the default context](#the-default-context).
+- **`file`**: the GGUF file to load from a repo id, by its name at the repo's top level (`"model-Q4_K_M.gguf"`). A
+  repo whose listing has no `config.json` with safetensors weights, and a GGUF file at its top level, is a GGUF repo, and loading it without `file` is a
+  `request` error that names the candidate files (`mmproj*` files and sharded `-NNNNN-of-NNNNN.gguf` files are never
+  candidates). The file is fetched at the listing's resolved commit and checked against the listed size and, when the
+  listing carries one, its LFS sha256 (else the Hub's `X-Linked-Etag`); the config, tokenizer and chat template come
+  from the file's own metadata, and a `config.json` in the repo is ignored. The weights stay in their blocks. A dense
+  GGUF (`F32`, `F16`, `BF16`) defaults to an f32 plan. `file` on an alias or a safetensors repo is a `request` error.
 - **`hubBaseUrl`**: where the model files and, for a repo id, the Hub listing (`/api/models/…`) are fetched from (default `https://huggingface.co`); a mirror serving only files loads aliases but not repo ids. **`offline`**
   uses only the browser's cache and fails with `fetch` for a file it lacks.
 - **`signal`**: cancels the load. Before the model is loaded, an abort terminates the engine's worker
@@ -157,7 +166,7 @@ interface LoadOptions {
 ## Checking a model before loading it
 
 ```ts
-type CheckOptions = Pick<LoadOptions, "backend" | "dtype" | "maxContext" | "storage" | "hubBaseUrl" | "signal" | "assets">;
+type CheckOptions = Pick<LoadOptions, "backend" | "dtype" | "maxContext" | "storage" | "hubBaseUrl" | "file" | "signal" | "assets">;
 type CheckResult = { ok: true; backend: "webgpu" | "wasm" } | { ok: false; kind: Kind; message: string };
 
 const r = await Caldrix.check("smollm2-instruct");
@@ -171,7 +180,8 @@ and `assets`, so it starts the same worker and `.wasm` the load would, under the
 it runs the same option checks, the same probe and the same tier choice. Its worker then runs the
 load only until the tier is settled: for a repo id the Hub listing (for a LoRA adapter repo, its
 `adapter_config.json` and its base's Hub listing too), then `config.json` and the safetensors index
-(for a GGUF alias, the file's header range instead), the same precheck as `load`, and on the WebGPU
+(for a GGUF file, an alias's or one named by `file`, the file's header range instead, and
+`rope_freqs.weight`'s extent, at most 512 bytes, as a second range when it lies past the header), the same precheck as `load`, and on the WebGPU
 tier the device open, after which the device is destroyed and the worker ends. It never fetches a
 tokenizer file or a weight, sends no `onProgress` events, and is never `offline`.
 
@@ -193,7 +203,7 @@ the console. The files a check fetches are written to the cache, and a later loa
 
 Only these runs are recorded (the browser-gate record: entries 5, 8 and 9 in the browser, and for the
 quantized aliases entries 10 and 11 off-browser and entries 12 and 14 in the browser, and for the adapter and
-nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.check` entry 20 in the browser, and for the Try page entry 21 in the browser); nothing else is claimed.
+nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.check` entry 20 in the browser, and for the Try page entry 21 in the browser, and for a GGUF file in a repo entry 22); nothing else is claimed.
 
 - **Model:** SmolLM2-135M-Instruct, one prompt, 8 greedy tokens; the adapter and nf4 repos below add a
   LoRA adapter over it and SmolLM2-360M-Instruct's nf4 repo, on their fixtures' prompt. No other model or prompt.
@@ -216,7 +226,8 @@ nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.che
 - adapter and nf4 repos by id (a LoRA adapter over SmolLM2-135M-Instruct, and SmolLM2-360M-Instruct's bitsandbytes nf4 repo, each at a pinned sha): off-browser at the desk on both tiers (the browser-gate record, entry 16: wasm both pairs and WebGPU the LoRA pair token-exact, the f32 plan at f32 weight storage; the WebGPU nf4 pair stopped at lavapipe's storage-buffer binding limit); in headless Chromium through `Caldrix.load` by repo id on both tiers, both pairs token-exact, the f32 plan at f32 weight storage, WebGPU on Dawn/SwiftShader, a CPU (entry 17).
 - `Caldrix.check`: in headless Chromium against the loopback hub (the browser-gate record, entry 20): on a repo id, check and load agreed on the wasm tier and, with WebGPU enabled in the browser, on the WebGPU tier on Dawn/SwiftShader, a CPU, and the check fetched no tokenizer file and no weight; an index past the wasm ceiling checked as `fit`, an unknown repo id as `fetch`.
 - the website's Try page: in Brave on an Apple M1 Max, headed, every model on its list loaded by repo id from the real Hub on the WebGPU tier, answered one chat message and ran the agent's first chip, as the operator reported it (entry 21).
-- **Not run:** any other WebGPU adapter or GPU; the WebAssembly tier in a headed browser;
+- a GGUF file in a repo by name (`file`): in headless Chromium through `Caldrix.load` against the loopback hub's tiny fixtures, on the wasm tier and on the WebGPU tier on Dawn/SwiftShader, a CPU, token-exact to the test harness's own tokens, with the name selecting the file, a digest mismatch refused as `digest`, and a header context past the wasm32 heap clamped and reported by `doctor`; off-browser, a rope-scaled quantized model token-exact on both tiers and the quantized row kernels past the grid dimension limit on lavapipe, a CPU (entry 22).
+- **Not run:** any real GGUF repo by id in a browser; Llama 3.2 or any model with a 128k vocabulary in a browser; a 2D-grid dispatch on a real adapter (the WebGPU row kernels past the grid dimension limit ran on lavapipe only); the WebGPU heap clamp in a browser; any other WebGPU adapter or GPU; the WebAssembly tier in a headed browser;
   the scalar (non-SIMD) wasm build in a
   browser; real-Hub digest behaviour (the runs used a loopback Hub stand-in); a real Hub listing for a repo id
   (the loopback hub served the pinned snapshots) beyond the Try page's own loads (entry 21); any browser other than
@@ -224,7 +235,9 @@ nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.che
   `Caldrix.check` against a real adapter's buffer limit (its unit tests only), against the real Hub, or in any other
   browser or on any other device. No performance figure is recorded or claimed.
 
-## The WebGPU default context
+## The default context
+
+On both tiers, a default context whose fit does not stay 64 MiB under the wasm32 heap's 4 GiB ceiling is clamped to the largest multiple of 256 whose fit does (a margin for the fit's stated, unmeasured terms; the margin itself is not yet measured; an explicit `maxContext` is held to the ceiling itself), and on WebGPU the smaller of that and the grid bound applies (`doctor()` reports it as above). The heap clamp ran in a browser on the wasm tier only, on a tiny fixture with a very large header context; on the WebGPU tier that run printed only the grid clamp (entry 22).
 
 Without `maxContext`, the WebGPU tier clamps the context so the attention kernel's grid stays within
 `maxComputeWorkgroupsPerDimension`. At the standard 65535 workgroups per dimension, SmolLM2's 8192
