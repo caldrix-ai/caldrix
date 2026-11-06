@@ -4,7 +4,8 @@
 or a repo id is downloaded into the standard Hugging Face cache and read from there after. The import
 accepts dense Llama, Mistral, Qwen2 and Qwen3 checkpoints, the Qwen3 mixture-of-experts architecture
 (`Qwen3MoeForCausalLM`) and Qwen3.5 (`Qwen3_5ForCausalLM`, and `Qwen3_5ForConditionalGeneration` as text
-only) in safetensors, bf16 or f32; quantized safetensors checkpoints are refused. Qwen3.5 runs on the `cpu`
+only) in safetensors, bf16, f32 or f16; f16 weights are computed in bf16 by default, or exactly with
+`--dtype f32`; quantized safetensors checkpoints are refused. Qwen3.5 runs on the `cpu`
 lane only ([Aliases](#aliases)); `inferno serve` also serves it on `--backend host`, its off-hardware test
 stand-in, which makes no hardware claim. Quantized Ollama tags (Q4_K_M and
 Q8_0) run on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); on the `hip` lane five
@@ -157,8 +158,9 @@ A gated repo needs its terms accepted on the Hub with your account, then `HF_TOK
 `Qwen3_5ForConditionalGeneration` (text only) (`MistralForCausalLM` is accepted, not verified on hardware).
 Every other architecture is refused by name. Within those, the import refuses:
 
-- a `torch_dtype` other than bf16 or f32 (f16 is refused by name), and any tensor stored as a type other
-  than f32, f16 or bf16, which covers quantized checkpoints;
+- a `torch_dtype` other than bf16, f32 or f16, and any tensor stored as a type other than f32, f16 or bf16,
+  which covers quantized checkpoints;
+- in a Qwen3 mixture-of-experts checkpoint, expert weights stored as anything but bf16;
 - any tensor the architecture does not use, since the compiler would ignore it (Qwen3.5's
   multi-token-prediction tensors, `mtp.*`, and the vision tower, `model.visual.*`, are skipped by name and
   never read);
