@@ -288,7 +288,7 @@ The prompts run one at a time, in order, each through the server's request queue
 above: other requests can run between them, and a full queue answers `429` for the whole request. A `500`
 also means the reading gave a probability that is not a finite number.
 
-`decider-0.8b` is a Qwen3.5 model, which this server runs on the CPU lane only ([models.md](models.md)),
+`decider-0.8b` is a Qwen3.5 model, which this server runs on the CPU lane and on `--backend host` (its off-hardware test stand-in) only ([models.md](models.md)),
 with `--max-batch 1` as above.
 
 ## Not implemented

@@ -5,7 +5,8 @@ or a repo id is downloaded into the standard Hugging Face cache and read from th
 accepts dense Llama, Mistral, Qwen2 and Qwen3 checkpoints, the Qwen3 mixture-of-experts architecture
 (`Qwen3MoeForCausalLM`) and Qwen3.5 (`Qwen3_5ForCausalLM`, and `Qwen3_5ForConditionalGeneration` as text
 only) in safetensors, bf16 or f32; quantized safetensors checkpoints are refused. Qwen3.5 runs on the `cpu`
-lane only ([Aliases](#aliases)). Quantized Ollama tags (Q4_K_M and
+lane only ([Aliases](#aliases)); `inferno serve` also serves it on `--backend host`, its off-hardware test
+stand-in, which makes no hardware claim. Quantized Ollama tags (Q4_K_M and
 Q8_0) run on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); on the `hip` lane five
 tags were token-exact in f32 on one MI300X ([Ollama tags](#ollama-tags)). Mistral is accepted
 by the import but has not been verified on hardware.
@@ -23,8 +24,9 @@ above 1 is refused for it. `decider-0.8b` (Qwen3.5, `Qwen3_5ForCausalLM`) is a d
 model. It and `Qwen/Qwen3.5-0.8B-Base` are verified by their token gates — eight greedy tokens of one prompt
 in f32 and in bf16, and of a 1,100-token prompt, against the PyTorch reference — at the desk on the CPU lane
 (x86-64-v3), on the AMD lane on one MI300X and on the Metal lane on one Apple M1 Max (64 GiB), through
-the engine. `caldrix` runs Qwen3.5 on the
-`cpu` lane only: the `hip` and `metal` lanes refuse it by name, as the browser does. `caldrix run` itself has not been exercised on it; `--max-batch` above 1 and `--weight-budget`
+the engine. `inferno serve` serves Qwen3.5 on the
+`cpu` lane and on `--backend host` (its off-hardware test stand-in, which makes no hardware claim) only: the `hip` and `metal` lanes refuse it by name. `caldrix` runs Qwen3.5 on the
+`cpu` lane only, and refuses it by name on `hip` and `metal`, as the browser does. `caldrix run` itself has not been exercised on it; `--max-batch` above 1 and `--weight-budget`
 are refused for it.
 
 | Alias | Hugging Face repo | Revision |
