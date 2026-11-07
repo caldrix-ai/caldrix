@@ -170,10 +170,16 @@ Every other architecture is refused by name. Within those, the import refuses:
   Max, the AMD lane likewise in a run on an MI300X, and the CPU lane at the desk on the 1B — a desk
   reading, not a run; the verification files say what has run);
 - dimensions out of bounds or inconsistent with each other;
+- an `lm_head.weight` beside a tied embedding whose shape or type differs from the embedding's;
 - for Qwen3.5, any `config.json` key outside the set it reads, and an active sliding window.
 
+A checkpoint whose `config.json` ties the output head to the embedding but which ships a different
+`lm_head.weight` runs with the shipped head, as transformers does; the command line says so at load (the
+browser build prints no note).
+
 Each refusal names the field and the value. For a model from the Hub, the refusal comes after
-`config.json` alone and says nothing else was downloaded.
+`config.json` alone and says nothing else was downloaded — except the tied-head check above, which has to
+read the weights and so comes after the download.
 
 A model with an active sliding window (a Mistral model with `sliding_window` set, or a Qwen model with
 `use_sliding_window: true`) runs at a context no wider than its window: within the window the window changes
