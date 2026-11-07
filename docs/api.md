@@ -28,6 +28,11 @@ curl http://localhost:8425/v1/chat/completions \
   `Qwen/Qwen3-0.6B`; for a directory, its name; `--served-name` sets it. Any other name is a `400`.
 - `messages` holds 1 to 256 messages and is rendered through the model's chat template. A model without a
   chat template (a base model such as SmolLM2-135M) refuses `messages`; use `/v1/completions`.
+- A message's `content` is a string or an array of parts in the OpenAI shape, `{"type": "text", "text": …}`
+  and `{"type": "image_url", "image_url": {"url": …}}`; text parts are joined with a newline before the
+  template. This server's models take text only: an image part is a `400` naming it
+  (`messages[i].content[j]`), as is a part of another type or a malformed one. An image URL must be
+  `data:image/png;base64,…` or `data:image/jpeg;base64,…`; remote URLs are not fetched.
 - `max_tokens` (or `max_completion_tokens`) caps the answer, at least `1`; without it, generation runs
   until the end-of-sequence token or until the context is full.
 - `stop` takes one string or up to four, each 1 to 256 bytes.
