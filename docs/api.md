@@ -27,7 +27,9 @@ curl http://localhost:8425/v1/chat/completions \
 - `model` must be the name the server answers to: for `caldrix serve qwen3-0.6b` that is the repo id,
   `Qwen/Qwen3-0.6B`; for a directory, its name; `--served-name` sets it. Any other name is a `400`.
 - `messages` holds 1 to 256 messages and is rendered through the model's chat template. A model without a
-  chat template (a base model such as SmolLM2-135M) refuses `messages`; use `/v1/completions`.
+  chat template (a base model such as SmolLM2-135M) refuses `messages`; use `/v1/completions`. When the
+  model's chat template refuses a system message, the server puts the system text at the top of the first
+  user message instead and says so once in its log; the response is unchanged.
 - A message's `content` is a string or an array of parts in the OpenAI shape, `{"type": "text", "text": …}`
   and `{"type": "image_url", "image_url": {"url": …}}`; text parts are joined with a newline before the
   template. This server's models take text only: an image part is a `400` naming it

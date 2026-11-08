@@ -57,7 +57,9 @@ function probe(): Promise<Capabilities>;
 `model` is an alias this build ships (`doctor().aliases`) or a Hugging Face repo id, `owner/name` or `owner/name@<revision>`. A repo id is resolved once through the Hub's model API to its canonical id and commit sha, and every file is fetched and cached at that sha; `doctor().model` and `doctor().revision` are the canonical id and the sha, and the doctor line says `(resolved from <id>)` when the canonical id differs from the one asked (a rename, or a different letter case). The browser build sends no token: a gated repo is refused by name, a private one reads as not found (the Hub answers it as it answers a missing repo), and the caldrix CLI, which reads `HF_TOKEN`, loads both. A repo id loads a dense Llama-family checkpoint, a bitsandbytes nf4 checkpoint (dequantized to the plan dtype at import: it runs at its dense size, not its download size; `doctor().note` says both), a PEFT LoRA adapter repo (its base, named by `adapter_config.json`, resolved once through the Hub's model API, and the adapter folded into it tensor by tensor at import), or a LoRA adapter over an nf4 base. `doctor().provenance` is the caldrix CLI's `model:` line, naming both repos and shas; progress events name the repo each file comes from. Folded weights are never cached: a repeat load fetches nothing new and folds again. A gated base, an adapter over an adapter, a pickle-only adapter and a repo carrying both a model and an adapter are refused by name before any weight byte.
 
 - **`chat`** formats the messages with the model's chat template; **`complete`** continues a plain-text
-  prompt, or a prompt given as token ids. Both yield deltas until one has `done: true`.
+  prompt, or a prompt given as token ids. Both yield deltas until one has `done: true`. When a model's
+  chat template refuses a system message, `chat` puts the system text at the top of the first user
+  message instead, and the last delta has `systemFolded: true`.
 - **`doctor()`** reports the load: the tier that runs (`backend`), `device`, `dtype`, `storage`,
   `adapter`, `maxContext` and `contextClamp`, where each model file came from and whether
   its digest was checked (`source`), where the package's own files came from (`assets`: `bundle`, `cdn`
@@ -78,6 +80,7 @@ interface Delta {
   finishReason?: "stop" | "length" | "abort";
   usage?: { promptTokens: number; completionTokens: number; cachedTokens: number };
   logprobs?: { token: number; logprob: number }[];
+  systemFolded?: true;
 }
 
 interface GenerationOptions {

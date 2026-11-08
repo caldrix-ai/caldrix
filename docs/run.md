@@ -71,6 +71,8 @@ caldrix run qwen3-0.6b
   `caldrix run smollm2-instruct` (SmolLM2-135M-Instruct), which has a chat template. It is verified on the
   CPU lane (x86-64-v3), not on Metal or AMD GPUs, and what was verified is its tokens on a plain-text
   prompt: the chat template is not exercised by any gate.
+- When the model's chat template refuses a system message (`--system`, `/system`), the system text is
+  placed at the top of the first user message instead, and stderr says so once.
 - Ctrl-C while an answer is streaming stops that answer. Ctrl-C at the prompt exits, as does end of
   input (Ctrl-D).
 
