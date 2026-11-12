@@ -64,7 +64,7 @@ by its token gates on one MI300X (resident), one M1 Max streamed under a 56 GiB 
 the CPU lane (x86-64-v3) streamed under a 20 GiB budget ([models.md](docs/models.md)).
 `decider-0.8b` (Qwen3.5) is a decision model, not a chat model; its token gates and the Qwen3.5 base
 model's ran at the desk on the CPU lane (x86-64-v3), on one MI300X and on one Apple M1 Max (through the
-engine), and `caldrix` runs Qwen3.5 on the `cpu` lane only: the `hip` and `metal` lanes refuse it
+engine), and `caldrix` runs Qwen3.5 on the `cpu`, `hip` and `metal` lanes; the browser refuses it
 ([models.md](docs/models.md)).
 Quantized: Ollama Q4_K_M and Q8_0 tags on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); on the `hip` lane, five tags were token-exact in f32 on one MI300X ([models.md](docs/models.md#ollama-tags)); quantized safetensors checkpoints are not supported.
 

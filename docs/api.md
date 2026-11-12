@@ -1,7 +1,8 @@
 # HTTP API
 
 `caldrix serve` speaks the OpenAI Chat Completions and Completions APIs on `http://localhost:8425`, with
-no API key, and serves one model. Generation is greedy unless a request, or the server's flags, asks for
+no API key, and serves one model; on an image pipeline it serves the Images API's generations endpoint
+instead ([`POST /v1/images/generations`](#post-v1imagesgenerations)). Generation is greedy unless a request, or the server's flags, asks for
 [sampling](#sampling); a feature field the server does not implement is refused with a `400` that names
 it, never ignored.
 
@@ -31,14 +32,40 @@ curl http://localhost:8425/v1/chat/completions \
   model's chat template refuses a system message, the server puts the system text at the top of the first
   user message instead and says so once in its log; the response is unchanged.
 - A message's `content` is a string or an array of parts in the OpenAI shape, `{"type": "text", "text": …}`
-  and `{"type": "image_url", "image_url": {"url": …}}`; text parts are joined with a newline before the
-  template. This server's models take text only: an image part is a `400` naming it
-  (`messages[i].content[j]`), as is a part of another type or a malformed one. An image URL must be
-  `data:image/png;base64,…` or `data:image/jpeg;base64,…`; remote URLs are not fetched.
+  and `{"type": "image_url", "image_url": {"url": …, "detail": …}}`; text parts are joined with a newline
+  before the template. A part of another type or a malformed one is a `400` naming it
+  (`messages[i].content[j]`). Image parts are taken only by a model with a vision tower (`smolvlm-256m`, on
+  the `cpu`, `hip` and `metal` lanes, [serve.md](serve.md#a-vision-model)); on a text model an image part is a `400` at `messages[i].content[j]`, "this model takes
+  text only". Typing `<image>` into a text part is a `400` naming `image placeholder count`.
+- An image URL must be `data:image/png;base64,…`, `data:image/jpeg;base64,…` (`image/jpg` is a spelling of
+  it) or `data:image/webp;base64,…`. The bytes must carry the signature of the type named. `image/gif` and
+  remote URLs are refused; the server never fetches a URL.
+- `detail` is absent, `auto` or `high` (the image is split into tiles) or `low` (one tile). Any other value
+  is a `400`.
+- Image limits, each a `400` naming its number: 8 images a request (`param` `messages`); 4096 pixels on a
+  decoded side, read from the header before the image is decoded; 8 MiB for an encoded image.
+  `prompt_tokens` counts every image token.
+- A server whose model has a vision tower accepts a 32 MiB request body, on every route it serves, not only
+  chat completions. Every other server keeps the 4 MiB limit and its `413`. A prompt too long for the
+  context is refused before any image is decoded. At most 2 requests decode images at once, server-wide,
+  and one request's images are processed one at a time; at most `--queue-depth` more wait, and one past
+  that is a `429` (`the image decode queue is full`). An image request never reuses a held or prefix
+  prompt row and is never captured by the replay ring.
 - `max_tokens` (or `max_completion_tokens`) caps the answer, at least `1`; without it, generation runs
   until the end-of-sequence token or until the context is full.
 - `stop` takes one string or up to four, each 1 to 256 bytes.
 - `prompt` is refused here; send `messages`.
+
+An image request on a vision server (SmolVLM-256M, `inferno-serve`, CPU lane; the base64 is cut here, and the
+response is as the server sent it):
+
+```text
+{"max_tokens":16,"messages":[{"content":[{"image_url":{"detail":"low","url":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABEwAAAK8CAIAAAB6…"},"type":"image_url"},{"text":"Describe this image in one sentence.","type":"text"}],"role":"user"}],"model":"smolvlm","return_token_ids":true}
+```
+
+```text
+{"choices":[{"finish_reason":"stop","index":0,"message":{"content":" In this image we can see a few shapes and a square.","role":"assistant"},"token_ids":[533,451,2443,392,416,963,253,1443,6146,284,253,5222,30]}],"created":1794140541,"id":"chatcmpl-1","model":"smolvlm","object":"chat.completion","usage":{"completion_tokens":13,"prompt_tokens":82,"total_tokens":95}}
+```
 
 ## Streaming
 
@@ -101,6 +128,49 @@ guesses against the loaded model; greedy output is the same tokens plain decodin
 
 When a request speculated, its `usage` gains `"speculative": {"proposed": <n>, "accepted": <n>}`, the draft
 tokens proposed and accepted. No speed is claimed here.
+
+## `POST /v1/images/generations`
+
+A server started on an image pipeline (`caldrix serve` on a directory holding `model_index.json`;
+[serve.md](serve.md#an-image-pipeline)) serves this
+endpoint, `GET /v1/models` and `/healthz` instead of the text endpoints, which answer `400` naming it.
+It makes one PNG from a prompt with FLUX.2 klein 4B on the CPU lane (a Mac build accepts
+`--backend metal`, built for the Metal lane and not yet recorded on a device). The request follows the OpenAI
+Images API's generations shape:
+
+```sh
+curl http://localhost:8425/v1/images/generations \
+  -H "Content-Type: application/json" \
+  -d '{"model": "FLUX.2-klein-4B", "prompt": "A watercolor of a lighthouse at dawn", "size": "256x256", "seed": 0}'
+```
+
+The answer carries the PNG inline, base64-encoded:
+
+```text
+{"created": <unix seconds>, "data": [{"b64_json": "<the PNG, base64>"}]}
+```
+
+| Field | Accepted |
+| --- | --- |
+| `model` | required: the name the server answers to |
+| `prompt` | required: a non-empty string, at most 512 tokens after the pipeline's chat rendering (refused, never truncated) |
+| `n` | absent, `null` or `1` |
+| `size` | `"<W>x<H>"`, each side a multiple of 16 and at most 4096, and `(W/16)·(H/16)` at most 4096 (`"1024x1024"` is the largest square); default `"1024x1024"`; refused, never rounded |
+| `response_format` | absent, `null` or `"b64_json"`; `"url"` is refused: the image is returned inline, never hosted |
+| `seed` | an integer from `0` to `18446744073709551615`; the same seed, prompt and size give the same PNG on this machine and build (tested on a reduced pipeline); drawn fresh when absent |
+
+Any other field is refused by name, and every refusal is a `400` naming the field as `param`, before the
+request is queued. One request is generated at a time; the queue in front of it holds `--queue-depth`
+requests and answers `429` past it, and a stopped worker answers `503`; a queued request whose client
+has gone is skipped, not generated. The server logs each request's size, seed and prompt token count,
+and a failure's reason, never the prompt.
+
+What has run, at the desk on the CPU lane (x86-64-v3): a 256×256 image in bf16 compared step by step
+with the PyTorch reference (each step nearer the reference's same step, and the image nearer it than
+each of five deliberately broken runs), and a 512×512 image made with no reference. The default
+1024×1024 has not been run end to end, and no image quality or speed is claimed. The prompt is padded
+to 512 tokens and its padding is encoded differently from the reference's, so an image from a prompt
+differs from the reference's more than one from the reference's own prompt encoding does.
 
 ## `GET /v1/models`
 
@@ -295,7 +365,7 @@ The prompts run one at a time, in order, each through the server's request queue
 above: other requests can run between them, and a full queue answers `429` for the whole request. A `500`
 also means the reading gave a probability that is not a finite number.
 
-`decider-0.8b` is a Qwen3.5 model, which this server runs on the CPU lane and on `--backend host` (its off-hardware test stand-in) only ([models.md](models.md)),
+`decider-0.8b` is a Qwen3.5 model, which this server runs on the CPU lane, on the HIP lane (one MI300X, single-stream), on the Metal lane (one Apple M1 Max) and on `--backend host` (its off-hardware test stand-in, which makes no hardware claim) ([models.md](models.md)),
 with `--max-batch 1` as above.
 
 ## Not implemented
@@ -317,9 +387,9 @@ naming the field at fault.
 
 | Status | When |
 | --- | --- |
-| `400` | a malformed request, an unknown model, a prompt too long for the context, or a field the server does not implement (named in the body) |
-| `413` | the request body is over 4 MiB |
-| `429` | the request queue is full (`--queue-depth`) |
+| `400` | a malformed request, an unknown model, a prompt too long for the context, a field the server does not implement (named in the body), or an image request's field or size the server refuses |
+| `413` | the request body is over 4 MiB, or over 32 MiB on a server whose model has a vision tower |
+| `429` | the request queue is full (`--queue-depth`), or, on a server whose model has a vision tower, the image decode queue is full (also `--queue-depth`) |
 | `500` | the engine failed during the request; on a streamed request the `200` has already been sent, so the failure arrives instead as a server-sent event carrying the same error object |
 | `503` | the engine has stopped |
 

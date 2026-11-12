@@ -126,6 +126,22 @@ Every refusal caldrix prints, with its cause and its fix. Each quoted message is
 
 **Fix.** Use a repo that publishes safetensors with a tokenizer ([models.md](models.md#what-is-downloaded)).
 
+### The weight files are refused
+
+> `names no weight file`
+
+> `which is not a bare file name`
+
+> `weight file(s) that are not present`
+
+> `transformers_weights names a weights file`
+
+> `inferno does not apply an adapter to a repo that`
+
+**Cause.** `caldrix` reads the weight files the way the `transformers` library does: `model.safetensors` alone when the repo has it, otherwise the files in `model.safetensors.index.json`, otherwise every `*.safetensors` file ([models.md](models.md#what-is-downloaded)). The index is refused (each message starts with the index's name) when it is over 16 MiB, is not an object of file names, names no file or more than 4096, names a file that is not a plain `.safetensors` name (or the index itself), or names a file the repo does not have. A `config.json` whose `transformers_weights` names a file is refused, because `caldrix` chooses files by name only. The message about not applying an adapter means the repo's weights are byte for byte its adapter's base model's, so the repo is only an adapter.
+
+**Fix.** For a broken index, use a repo whose index and files agree (a partial download looks the same; download again). For the adapter message, run the base model it names.
+
 ### The repo's tokenizer files are refused
 
 > `which inferno cannot reproduce exactly`

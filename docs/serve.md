@@ -90,6 +90,7 @@ download starts.
 | `--prefill-attention rows\|tiles` | AMD lane only: the prefill attention kernel's spelling; `tiles` needs `--max-batch 8`, a bf16 Llama model and, with `--prefill-chunk N`, `N` a multiple of 32, and is refused otherwise | `rows` |
 | `--batch-attention rows\|grouped` | AMD lane only: the batched attention kernels' spelling | `rows` |
 | `--sampler device\|host` | AMD lane only, with `--max-batch 8`: where a sampled token is picked, on the GPU or on the CPU ([api.md](api.md#sampling)) | `device` |
+| `--denoiser-weights FILE` | an image pipeline only: read the denoiser from this GGUF file instead of `transformer/`; it runs in f32 ([An image pipeline](#an-image-pipeline)) | the pipeline's `transformer/` |
 | `--draft-model DIR\|ALIAS\|REPO` | speculate with this draft model on a lane that can check a draft (`speculation=yes` in [doctor.md](doctor.md)); a draft that fails its checks falls back to n-gram lookup, with a stderr line ([run.md](run.md#speculative-decoding)) | none |
 | `--admin` | open the variant-swap admin endpoint, on loopback only; needs `--admin-port` | off |
 | `--admin-port N` | the admin endpoint's port, different from `--port` | none |
@@ -103,6 +104,60 @@ refused on the `metal` and `cpu` lanes. The `--admin` flags are refused on the `
 The sampling flags set the server's defaults for every request; a request's own `temperature`, `top_p`,
 `top_k`, `min_p`, `repetition_penalty` and `seed` override them per call ([api.md](api.md#sampling)).
 
+## A vision model
+
+`caldrix serve smolvlm-256m --backend cpu` serves SmolVLM-256M, which takes image parts in a chat message
+([api.md](api.md)); at startup stderr carries the line `vision: siglip 12×768, 64 tokens/tile, tower f32`. It runs on the
+`cpu`, `hip` and `metal` lanes, one request at a time, from its safetensors weights held resident; on `hip` a startup line
+says the default `--max-batch` is lowered from 8 to 1. On the `hip` lane `inferno serve` served it on one MI300X;
+`caldrix serve` itself has not been exercised there. On the `metal` lane `inferno serve` served it on one Apple M1 Max;
+`caldrix serve` itself has not been exercised there ([models.md](models.md#aliases)).
+
+- `--dtype bf16` (the default) runs the text model in bf16; `--dtype f32` runs it in f32. The vision tower
+  runs in f32 at either, and its output enters the text model in the text model's type.
+- Refused by name at startup, each naming the vision tower: `--max-batch` above `1`, `--weight-budget`, a
+  kernel flag (`--batch-gemv`, `--tail`, `--prefill-attention`, `--batch-attention`, `--sampler`) at other than
+  its default, `--admin`, `--speculate draft` and `--speculate ngram`, and a GGUF file
+  or quantized weights.
+- It decodes without speculation, and `caldrix` adds no speculation flag or draft for it. If `--speculate auto`
+  is passed, a startup line says speculation is off and why; `--speculate draft` and `--speculate ngram` are refused.
+- Its request body limit is 32 MiB, on every route, and at most 2 requests decode images at once
+  ([api.md](api.md)).
+
+## An image pipeline
+
+`caldrix serve` on a directory holding `model_index.json` (a diffusers FLUX.2 klein 4B pipeline) serves
+[`POST /v1/images/generations`](api.md#post-v1imagesgenerations) instead of the text endpoints. Its
+recorded lane is `cpu`, the only lane `--backend auto` takes for it; a Mac build accepts `--backend metal`,
+built for the Metal lane and not yet recorded on a device. `caldrix serve flux2-klein-4b` downloads the
+alias as `caldrix run` does ([run.md](run.md#generating-an-image)), its memory check counting the text encoder
+kept resident beside the denoiser, then serves the download as a pipeline directory; once downloaded it is
+served from the cache with no request. `caldrix serve owner/name` does the same for a Hugging Face repo
+whose file list holds `model_index.json` at its top, at the commit that list named. `caldrix` tells a
+pipeline from a text model by the first file list it reads for a text model anyway, so serving a text
+model makes no extra request. The alias and repo-id paths are tested against a local stand-in for the
+Hub only; no real download of the alias has run.
+
+- The text encoder loads on the first request and stays resident beside the denoiser, so later requests
+  reload nothing; one request is generated at a time. The startup line names the lane, the dtype and the
+  weights on disk.
+- `--dtype bf16` (the default) or `f32` sets the text encoder's and the denoiser's type; the autoencoder
+  always runs in f32.
+- `--denoiser-weights FILE` reads the denoiser from a GGUF file in Black Forest Labs' layout (unsloth's
+  files) instead of `transformer/`. Its rows are widened to f32 when they load, so it runs in f32: it is
+  the default for it, and an explicit `--dtype bf16` is refused. A Q8_0 file's header, byte order and
+  widened rows are checked against the safetensors at the desk; no image has been made from a GGUF
+  denoiser of the real checkpoint. A file holding a tensor type inferno does not read (a Q4_K_M file's
+  Q5_K tensors) is refused by name.
+- Refused by name at startup: a `--backend` other than `cpu` or, on a Mac build, `metal`, `--threads` or
+  `--cpu-isa` with `--backend metal`, `--max-batch` above `1`, a draft model, `--speculate draft` and
+  `--speculate ngram`, `--weight-budget`, `--admin`, and the sampling flags, whatever their value
+  (`--temperature 0` included; a request's `seed` seeds its image). A tokenizer that can produce ids
+  past the text encoder's vocabulary is refused before anything loads.
+- `INFERNO_HIDDEN_STATE_LAYERS=a,b,c` names the text encoder's hidden-state layers for a reduced test
+  pipeline whose encoder is shallower than klein's: three integers, strictly ascending, each at least 1
+  and below the encoder's layer count, else refused by name. Unset, klein's layers are used.
+
 ## Binding and proxies
 
 The server listens on `127.0.0.1`, so only this machine can reach it. `--host 0.0.0.0` (or any address
@@ -112,4 +167,4 @@ authentication and no TLS.
 To serve other machines, keep the default and put a reverse proxy in front that terminates TLS and
 authenticates clients, forwarding to `http://127.0.0.1:8425`. Answers stream as server-sent events, so turn
 off response buffering for `/v1/` in the proxy. A request body over 4 MiB is refused with `413` by the
-server itself.
+server itself (32 MiB for a vision model).

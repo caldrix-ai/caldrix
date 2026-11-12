@@ -26,7 +26,13 @@ lanes
 
 model support
   Inferno runs quantized GGUF (Q4_K_M, Q8_0) on the metal and hip lanes and on the cpu lane (a desk reading, not a run); quantized safetensors checkpoints other than bitsandbytes nf4 (densified at fetch) and NVIDIA GPUs are not supported
-  Inferno runs Qwen3.5 on the cpu lane only (x86-64-v3; a desk reading, not a run); the hip and metal lanes refuse it, though its token gates ran on one MI300X and on one Apple M1 Max
+  Inferno runs Qwen3.5 on the cpu lane (x86-64-v3; a desk reading, not a run), the hip lane (one MI300X) and the metal lane (one Apple M1 Max)
+  images on metal: yes (SmolVLM, 64 tokens per 512-px tile)
+  images on hip: yes (SmolVLM, 64 tokens per 512-px tile)
+  images on cpu: yes (SmolVLM, 64 tokens per 512-px tile)
+  image generation on metal: no
+  image generation on hip: no
+  image generation on cpu: yes (FLUX.2 klein 4B, CPU desk record)
 
 not supported
   none
@@ -45,7 +51,14 @@ no kernel was launched; `caldrix run` is what shows a lane works
   guesses, so `--draft-model` can speculate there ([run.md](run.md#speculative-decoding)). It reports what the
   build supports, not a measurement; today `cpu` and `hip` say `yes`.
 - **`model support`** says which model formats Inferno runs on which lanes (quantized GGUF) and where Qwen3.5
-  (`Qwen3_5ForCausalLM`) runs: `caldrix` runs it on the `cpu` lane only ([models.md](models.md#aliases)).
+  (`Qwen3_5ForCausalLM`) runs: `caldrix` runs it on the `cpu`, `hip` and `metal` lanes ([models.md](models.md#aliases)).
+  Then one `images on <lane>:` line per lane, in the lanes' order: `yes` where a model that takes images
+  runs on that lane (today SmolVLM, `smolvlm-256m`, on `cpu`, `hip` and `metal`: 64 prompt tokens for each 512-pixel tile), else
+  `no` ([run.md](run.md#images)). Then one `image generation on <lane>:` line per lane: `yes` on a lane
+  `--backend auto` may choose to make images from a prompt (today FLUX.2 klein 4B, the `flux2-klein-4b`
+  alias or a pipeline directory, on `cpu`, as verified at the desk on that lane), else `no` (a lane
+  `--backend` admits by flag alone, `metal` for klein, prints `no`) ([run.md](run.md#generating-an-image)). Like the rest of the block, it says what this build supports,
+  not what was probed on this machine.
 - **`not supported`** lists what the probes found that Inferno does not run. When a device under `/sys/class/drm`
   reports NVIDIA's vendor id, a line says an NVIDIA device is present and not supported; otherwise it reads `none`.
 - **The last line** is a reminder: the report comes from probes, and only `caldrix run` shows a lane

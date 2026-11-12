@@ -4,13 +4,15 @@
 or a repo id is downloaded into the standard Hugging Face cache and read from there after. The import
 accepts dense Llama, Mistral, Qwen2 and Qwen3 checkpoints, the Qwen3 mixture-of-experts architecture
 (`Qwen3MoeForCausalLM`) and Qwen3.5 (`Qwen3_5ForCausalLM`, and `Qwen3_5ForConditionalGeneration` as text
-only) in safetensors, bf16, f32 or f16; f16 weights are computed in bf16 by default, or exactly with
-`--dtype f32`; quantized safetensors checkpoints are refused. Qwen3.5 runs on the `cpu`
-lane only ([Aliases](#aliases)); `inferno serve` also serves it on `--backend host`, its off-hardware test
+only) in safetensors, bf16, f32 or f16, and SmolVLM's vision-language architecture
+(`Idefics3ForConditionalGeneration`), which runs on the `cpu`, `hip` and `metal` lanes ([Aliases](#aliases)); f16 weights are computed in bf16 by default, or exactly with
+`--dtype f32`; quantized safetensors checkpoints are refused. Qwen3.5 runs on the `cpu`,
+`hip` and `metal` lanes ([Aliases](#aliases)); `inferno serve` also serves it on `--backend host`, its off-hardware test
 stand-in, which makes no hardware claim. Quantized Ollama tags (Q4_K_M and
 Q8_0) run on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); on the `hip` lane five
 tags were token-exact in f32 on one MI300X ([Ollama tags](#ollama-tags)). Mistral is accepted
-by the import but has not been verified on hardware.
+by the import but has not been verified on hardware. FLUX.2 klein 4B, an image pipeline, makes images
+from a prompt on the `cpu` lane ([Image pipelines](#image-pipelines)).
 
 ## Aliases
 
@@ -26,9 +28,24 @@ model. It and `Qwen/Qwen3.5-0.8B-Base` are verified by their token gates — eig
 in f32 and in bf16, and of a 1,100-token prompt, against the PyTorch reference — at the desk on the CPU lane
 (x86-64-v3), on the AMD lane on one MI300X and on the Metal lane on one Apple M1 Max (64 GiB), through
 the engine. `inferno serve` serves Qwen3.5 on the
-`cpu` lane and on `--backend host` (its off-hardware test stand-in, which makes no hardware claim) only: the `hip` and `metal` lanes refuse it by name. `caldrix` runs Qwen3.5 on the
-`cpu` lane only, and refuses it by name on `hip` and `metal`, as the browser does. `caldrix run` itself has not been exercised on it; `--max-batch` above 1 and `--weight-budget`
+`cpu` lane, on the `hip` lane (one MI300X, single-stream: the default `--max-batch` is lowered to 1), on the `metal` lane (one Apple M1 Max) and on `--backend host` (its off-hardware test stand-in, which makes no hardware claim). `caldrix` runs Qwen3.5 on the
+`cpu`, `hip` and `metal` lanes; the browser refuses it. `caldrix run` ran it on the `hip` lane on one MI300X and on the `metal` lane on one Apple M1 Max; `--max-batch` above 1 and `--weight-budget`
 are refused for it.
+
+`smolvlm-256m` (SmolVLM-256M-Instruct, `Idefics3ForConditionalGeneration`) is a vision-language model: it takes
+images as well as text, in `caldrix run` with `-i` and `/image` ([run.md](run.md#images)) and in `caldrix serve`
+as image parts ([api.md](api.md)). It runs on the CPU, HIP and Metal lanes; the browser refuses it by name;
+`caldrix doctor` prints which lanes take images. It is verified at the desk on the
+CPU lane (x86-64-v3) by its token gate: greedy tokens of fixture images against the PyTorch reference at f32 and
+bf16 through the engine, and through the server at f32; at bf16 the server's tokens equal the engine's own (the vision
+tower runs in f32 at either `--dtype`; the text model at the `--dtype` given). On the HIP lane its token gate ran on one
+AMD Instinct MI300X (`gfx942`, ROCm 6.4): greedy tokens against the PyTorch reference through the engine in the seven gated f32 cases and
+in the three scored bf16 cases, and through the server (`inferno-serve --backend hip`), whose tokens equal the
+engine's own at f32 and bf16; `caldrix run` and `caldrix serve` themselves have not been exercised on the HIP lane. On the Metal
+lane its token gate ran on one Apple M1 Max (macOS 15.7.9): greedy tokens against the PyTorch reference through the engine in the
+seven gated f32 cases and in the three scored bf16 cases, and through the server (`inferno-serve --backend metal`), whose tokens
+equal the engine's own at f32 and bf16; `caldrix run` and `caldrix serve` themselves have not been exercised on the Metal lane.
+It is not a draft model, and an adapter over it is refused.
 
 | Alias | Hugging Face repo | Revision |
 | --- | --- | --- |
@@ -36,8 +53,54 @@ are refused for it.
 | `smollm2-instruct` | `HuggingFaceTB/SmolLM2-135M-Instruct` | `12fd25f77366fa6b3b4b768ec3050bf629380bac` |
 | `llama-8b` | `deepseek-ai/DeepSeek-R1-Distill-Llama-8B` | `6a6f4aa4197940add57724a7707d069478df56b1` |
 | `qwen3-0.6b` | `Qwen/Qwen3-0.6B` | `c1899de289a04d12100db370d81485cdf75e47ca` |
+| `qwen3-8b` | `Qwen/Qwen3-8B` | `b968826d9c46dd6066d109eabc6255188de91218` |
 | `qwen3-30b-a3b` | `Qwen/Qwen3-30B-A3B` | `ad44e777bcd18fa416d9da3bd8f70d33ebb85d39` |
 | `decider-0.8b` | `Mapika/decider-0.8b` | `a0a01d6f8135298f400a8c856b355793012ae971` |
+| `smolvlm-256m` | `HuggingFaceTB/SmolVLM-256M-Instruct` | `7e3e67edbbed1bf9888184d9df282b700a323964` |
+| `flux2-klein-4b` | `black-forest-labs/FLUX.2-klein-4B` | `e7b7dc27f91deacad38e78976d1f2b499d76a294` |
+
+## Image pipelines
+
+`flux2-klein-4b` (FLUX.2 klein 4B, `black-forest-labs/FLUX.2-klein-4B`, licensed Apache-2.0 per its model
+card) is an image pipeline: a text encoder, a denoiser and an autoencoder in one diffusers repo, with
+`model_index.json` at its top. `caldrix run` makes one PNG from a prompt with it
+([run.md](run.md#generating-an-image)) and `caldrix serve` serves it
+([serve.md](serve.md#an-image-pipeline)); a directory holding `model_index.json` is used as it is, by
+`caldrix run` and `caldrix serve` ([serve.md](serve.md#an-image-pipeline)). Its recorded lane is the CPU
+lane, the only lane `--backend auto` takes for it; a Mac build accepts `--backend metal`, built for the
+Metal lane and not yet recorded on a device. `caldrix` refuses it by name on `hip`, and the browser build
+refuses the alias by name and does not list it. It is verified at the desk on the CPU lane (x86-64-v3):
+a 256×256 image in bf16 against
+the PyTorch reference, step by step, and a 512×512 image with no reference. The default 1024×1024 has
+not been run end to end, and nothing about image quality or speed is claimed.
+
+A Hugging Face repo id is an image pipeline when its file list holds `model_index.json` at its top, and
+by nothing else: `caldrix run <owner/name> -p PROMPT -o OUT.png` looks the repo up once and runs it at
+the commit that list named ([run.md](run.md#generating-an-image)), and `caldrix serve <owner/name>`
+serves it ([serve.md](serve.md#an-image-pipeline)); any other repo id is a text model. The files
+fetched are a fixed list, at the resolved commit: `model_index.json`, the four components'
+configuration files (`scheduler/scheduler_config.json`, `text_encoder/config.json`,
+`transformer/config.json`, `vae/config.json`), the tokenizer's files (`tokenizer/tokenizer.json`,
+`tokenizer/tokenizer_config.json`, `tokenizer/vocab.json`, `tokenizer/merges.txt`,
+`tokenizer/added_tokens.json` and the chat template `tokenizer/chat_template.jinja`, whichever the
+repo has),
+`vae/diffusion_pytorch_model.safetensors`, and the weight files of `text_encoder/` and `transformer/`:
+the ones its index file (`model.safetensors.index.json`, `diffusion_pytorch_model.safetensors.index.json`)
+names, or, with no index file, the directory's one `.safetensors` file. A directory with no index that
+holds more than one, such as a variant (`*.fp16.safetensors`) beside the single file, is refused.
+No other file in the repo is fetched. On `caldrix serve <owner/name>`, a repo the model index does not
+hold is first described as any repo is (its file list, its configuration files and the first bytes of
+its weight files), so no whole weight file is downloaded before it is judged. A repo whose file list
+names more than 4096 files, or a path that is not a plain relative path, is refused whole, before
+anything is fetched. The five configuration files come first, each at most 64 KiB, with the index
+files, each at most 16 MiB, and each tokenizer file is held to its own limit by its listed size; an index that is not valid JSON or names a file
+that is not a plain `.safetensors` name in its own directory refuses the repo by name. The
+configuration files must pass the import's checks, with the memory and disk the run needs ("needs at
+least": the memory figure is a lower bound), before any weight or tokenizer file is fetched.
+
+A GGUF denoiser (`--denoiser-weights`, [serve.md](serve.md#an-image-pipeline)) is read in Black Forest
+Labs' layout and widened to f32 as it loads; a file holding Q5_K tensors (unsloth's Q4_K_M) is refused by
+name, and there is no quantized pipeline alias.
 
 ## Ollama tags
 
@@ -109,18 +172,37 @@ From the top level of the repo, at the resolved commit:
 - `config.json`, first, alone. It must pass the import's checks (below) before anything else is fetched,
   so a refused model costs one small download.
 - `tokenizer.json`, and `tokenizer_config.json` and `generation_config.json` when the repo has them.
+  `chat_template.json` is fetched too when the repo has it, and read for the chat template when there is
+  no `chat_template.jinja`.
   A repo without `tokenizer.json` needs a SentencePiece `tokenizer.model` instead, or else both
   `vocab.json` and `merges.txt`: right after `config.json` they are fetched (with `added_tokens.json`
   and `tokenizer_config.json` when the repo has them) and checked before any weights. inferno
   converts them only when it supports that kind; otherwise the refusal says why, and nothing else is
   downloaded. A repo with `tokenizer.json` never downloads its `tokenizer.model` or the pair; one with `tokenizer.model` never downloads the pair.
-- `model.safetensors.index.json` when the repo has one, then every `*.safetensors` file.
+- `preprocessor_config.json` and `processor_config.json` when the repo has them: they say how a vision
+  model (`smolvlm-256m`'s architecture) resizes an image and cuts it into tiles. A vision model must have
+  both, each within its size cap, before any weight file is fetched; on a lane that does not run it, the
+  model is refused after `config.json` alone.
+- The weight files, chosen the way the `transformers` library chooses them: `model.safetensors` alone when
+  the repo has it; otherwise the files named in `model.safetensors.index.json`; otherwise every
+  `*.safetensors` file. Any other `.safetensors` file in the repo is not downloaded and not named. When a
+  local directory or an already-downloaded copy holds `.safetensors` files the rule leaves out, or the repo
+  ships an adapter beside a model, `caldrix` prints a note naming the files it does not read:
+  `caldrix: reads model.safetensors (as transformers loads it); not read: …`.
 
 A repo without `config.json`, a supported tokenizer (`tokenizer.json`, a SentencePiece `tokenizer.model`, or both `vocab.json` and `merges.txt`) or any
 `*.safetensors` file is refused; GGUF, `.bin` and other
 weight formats are not supported. Before downloading, `caldrix` prints the number of files and their total
 size, then each file. Files already in the cache are kept, so an interrupted download resumes at the
 first missing file.
+
+With a Llama tokenizer (`LlamaTokenizer`), a character the vocabulary has no token for, not even a byte token, is left out of the prompt, as transformers leaves it out. With a CodeLlama tokenizer (`CodeLlamaTokenizer`), a prompt containing `<FILL_ME>` is rewritten for fill-in-the-middle, as transformers does.
+
+Some repos ship full weights beside an `adapter_config.json`. `caldrix` asks the Hub for the checksums of
+the repo's weight files and of the adapter's base model. If they are the same files, the repo is refused
+as an adapter over that base. If they differ, the shipped model is run and the adapter files are listed
+as not read. If the two cannot be compared, the shipped model is run with a note saying why.
+In the browser, caldrix.js makes the same comparison from the two repos' file listings, fetching no weight bytes for it: when every weight file it would read is the base's, unchanged, the load is refused naming both repos; otherwise the model runs and `doctor().notRead` names the adapter files it does not read, ending with why the base could not be compared when it could not.
 
 Downloads are not checked against a content digest: integrity rests on TLS and on the import's
 validation of every file.
@@ -154,8 +236,9 @@ A gated repo needs its terms accepted on the Hub with your account, then `HF_TOK
 ## What the import refuses
 
 `config.json` must declare exactly one architecture, one of `LlamaForCausalLM`, `MistralForCausalLM`,
-`Qwen2ForCausalLM`, `Qwen3ForCausalLM`, `Qwen3MoeForCausalLM`, `Qwen3_5ForCausalLM` and
-`Qwen3_5ForConditionalGeneration` (text only) (`MistralForCausalLM` is accepted, not verified on hardware).
+`Qwen2ForCausalLM`, `Qwen3ForCausalLM`, `Qwen3MoeForCausalLM`, `Qwen3_5ForCausalLM`,
+`Qwen3_5ForConditionalGeneration` (text only) and `Idefics3ForConditionalGeneration` (the CPU lane only)
+(`MistralForCausalLM` is accepted, not verified on hardware).
 Every other architecture is refused by name. Within those, the import refuses:
 
 - a `torch_dtype` other than bf16, f32 or f16, and any tensor stored as a type other than f32, f16 or bf16,
