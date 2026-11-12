@@ -105,7 +105,8 @@ and, last on stderr, the image line:
 image: 512×512 ×13 tiles, 832 rows
 ```
 
-- A file must be PNG, JPEG or WebP, told from its bytes, not its name, and at most 8 MiB. It is read once,
+- A file must be PNG or JPEG, told from its bytes, not its name, and at most 8 MiB. A WebP is refused by
+  name (`WebP images are not accepted in this build; send a PNG or a JPEG`). It is read once,
   before the model is downloaded or loaded, so a refused file costs nothing; a pipe such as `-i <(curl …)`
   works.
 - Each image is cut into tiles the way the HTTP API's `"detail": "auto"` does ([api.md](api.md)), and stderr
@@ -183,7 +184,7 @@ been run end to end. No image quality or speed is claimed.
 | `-p PROMPT`, `--prompt PROMPT` | answer this prompt and exit | chat |
 | `-o OUT.png`, `--output OUT.png` | an image pipeline only: write the PNG here ([Generating an image](#generating-an-image)) | none; required for a pipeline |
 | `--size WxH` | an image pipeline only: the image's width and height, each a multiple of 16 | `1024x1024` |
-| `-i IMAGE`, `--image IMAGE` | attach a PNG, JPEG or WebP file to the first message; repeatable, up to 8 ([Images](#images)) | none |
+| `-i IMAGE`, `--image IMAGE` | attach a PNG or JPEG file to the first message; repeatable, up to 8 ([Images](#images)) | none |
 | `--max-tokens N` | stop after `N` new tokens (a positive integer) | until the end-of-sequence token or a full context; from v0.1.2, 256 tokens for a model without a chat template |
 | `--ctx N` | the compiled context length, in tokens | `2048` |
 | `--backend auto\|hip\|metal\|cpu` | the lane: AMD GPU, Apple GPU or CPU | `auto`: the first usable of `metal`, `hip`, `cpu` ([doctor.md](doctor.md)) |

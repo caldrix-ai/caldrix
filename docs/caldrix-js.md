@@ -64,14 +64,14 @@ function probe(): Promise<Capabilities>;
   `adapter`, `maxContext` and `contextClamp`, where each model file came from and whether
   its digest was checked (`source`), where the package's own files came from (`assets`: `bundle`, `cdn`
   or `page`, with the URL), `aliases` (every alias this build loads, each with its `name` and its
-  `format`, `safetensors` or `gguf`), `provenance` (a densified load's `model:` line, `null` for a model read as it lies), `note` (an nf4 repo's 4-bit note, `null` otherwise), and `why` the tier was chosen.
+  `format`, `safetensors` or `gguf`), `provenance` (a densified load's `model:` line, `null` for a model read as it lies), `note` (an nf4 repo's 4-bit note, `null` otherwise), `images` (whether the tier takes image parts; see [Images](#images)), and `why` the tier was chosen.
 - **`dispose()`** releases the worker and everything in it. Every later call throws `request`.
 - **`probe()`** reports what this page can run, without loading anything: the WebAssembly features, the
   WebGPU adapter if there is one, which tiers are available, the tier `"auto"` would choose (`chosen`)
   and `why`.
 
 ```ts
-type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
+type ChatMessage = { role: "system" | "user" | "assistant"; content: string | ContentPart[] };
 
 interface Delta {
   text: string;
@@ -95,7 +95,10 @@ interface GenerationOptions {
   maxTokens?: number;
 }
 
-type GenerateOptions = GenerationOptions & { signal?: AbortSignal };
+type GenerateOptions = GenerationOptions & {
+  signal?: AbortSignal;
+  onImageProgress?: (p: { tilesDone: number; tilesTotal: number }) => void;
+};
 ```
 
 Generation is greedy unless a sampling option is set. Aborting the `signal` ends the generation with
@@ -116,6 +119,53 @@ The package's errors are `CaldrixError`s, whose `kind` says which stage refused:
 ```ts
 type Kind = "probe" | "fit" | "architecture" | "fetch" | "digest" | "validate" | "lowering" | "backend" | "request";
 ```
+
+## Images
+
+This section describes caldrix.js 0.15.0, which is not yet published: the published version takes
+text-only messages.
+
+`smolvlm-256m` (SmolVLM-256M-Instruct, a vision-language model) runs in the browser on the wasm tier:
+`chat` takes images as well as text. It has run in Playwright's headless Chromium on Linux only, on a test
+build of the browser host that admitted the model ahead of this version (the browser-gate record,
+entries 59 and 60; see [What has run, and where](#what-has-run-and-where)). The WebGPU tier builds no vision tower and refuses the model with
+`kind: "request"`, `Idefics3ForConditionalGeneration runs in the browser on the wasm tier in this build, not
+on WebGPU`; under `backend: "auto"` the load then falls back to the wasm tier, and `doctor().why` begins
+`webgpu refused:`.
+
+A message's `content` is a string or an array of parts:
+
+```ts
+type ContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string | Uint8Array; detail?: "low" | "high" | "auto" } };
+```
+
+An image is a PNG or a JPEG: a `data:` URL string (`data:image/png;base64,`, `data:image/jpeg;base64,`
+or `data:image/jpg;base64,`) or the image file's own bytes as a `Uint8Array`; the engine never fetches a
+URL. A WebP is refused by name in this build, as a URL or as bytes. `doctor().images` says whether the tier takes image parts, in the caldrix
+CLI's words: `"yes (SmolVLM, 64 tokens per 512-px tile)"` on the wasm tier, `"no"` on WebGPU. On a
+text-only model an image part is a `request` refusal.
+
+`onImageProgress` is called on the page after each image tile is encoded, before the prefill; a throw
+from it aborts the call as `signal` would, then, once the call has ended, the call rejects with the
+callback's own error (not a `CaldrixError`) and the engine stays usable. A call aborted while its images are being encoded ends with
+one `done` delta, `finishReason: "abort"`, `usage.completionTokens` 0 and no `token`; the engine stays
+usable.
+
+A malformed image request is a `CaldrixError` of kind `request`, in the caldrix server's words (`i` the
+message, `j` the part), and leaves the engine usable:
+
+| Input | Message |
+|---|---|
+| a remote URL | `messages[i].content[j].image_url.url: remote URLs are not fetched; send a data: URL` |
+| a WebP (a `data:image/webp` URL, or a WebP's bytes under any label or as a `Uint8Array`) | `messages[i].content[j].image_url.url: WebP images are not accepted in this build; send a PNG or a JPEG` |
+| another media type | `messages[i].content[j].image_url.url: unsupported media type; send data:image/png;base64, data:image/jpeg;base64 or data:image/jpg;base64` |
+| a `detail` outside the three | `messages[i].content[j].image_url.detail: must be "auto", "high" or "low"` |
+| more than 8 images | `messages: a request may carry at most 8 images; this one has {n}` |
+| bytes over the limit (8 MiB) | `messages[i].content[j].image_url.url: the image is {n} bytes, over the limit of {limit} bytes` |
+| bytes that are not a PNG or JPEG | `messages[i].content[j].image_url.url: unsupported media type: the bytes are not a PNG or JPEG` |
+| a `Blob` or any other object as `url` | `messages[i].content[j].image_url.url: must be a string or a Uint8Array` |
 
 ## Options
 
@@ -247,7 +297,7 @@ count disagree with the table. Facts recorded from an older commit of a repo ans
 
 Only these runs are recorded (the browser-gate record: entries 5, 8 and 9 in the browser, and for the
 quantized aliases entries 10 and 11 off-browser and entries 12 and 14 in the browser, and for the adapter and
-nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.check` entry 20 in the browser, and for the Try page entry 21 in the browser, and for a GGUF file in a repo entry 22, and for `Caldrix.fit` entry 24); nothing else is claimed.
+nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.check` entry 20 in the browser, and for the Try page entry 21 in the browser, and for a GGUF file in a repo entry 22, and for `Caldrix.fit` entry 24, and for images entries 59 and 60); nothing else is claimed.
 
 - **Model:** SmolLM2-135M-Instruct, one prompt, 8 greedy tokens; the adapter and nf4 repos below add a
   LoRA adapter over it and SmolLM2-360M-Instruct's nf4 repo, on their fixtures' prompt. No other model or prompt.
@@ -272,11 +322,12 @@ nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.che
 - the website's Try page: in Brave on an Apple M1 Max, headed, every model on its list loaded by repo id from the real Hub on the WebGPU tier, answered one chat message and ran the agent's first chip, as the operator reported it (entry 21).
 - a GGUF file in a repo by name (`file`): in headless Chromium through `Caldrix.load` against the loopback hub's tiny fixtures, on the wasm tier and on the WebGPU tier on Dawn/SwiftShader, a CPU, token-exact to the test harness's own tokens, with the name selecting the file, a digest mismatch refused as `digest`, and a header context past the wasm32 heap clamped and reported by `doctor`; off-browser, a rope-scaled quantized model token-exact on both tiers and the quantized row kernels past the grid dimension limit on lavapipe, a CPU (entry 22).
 - `Caldrix.fit`: in headless Chromium against the loopback hub's tiny fixtures, on the wasm tier and on the WebGPU tier on Dawn/SwiftShader, a CPU: the committed facts of the hub's Q8_0 file and of its long-context copy answered `ok` with the tier, and the `maxContext` and `contextClamp` a load of that file reported in `doctor()`, with no request to the hub; the facts with one tensor's type changed to one this build lacks answered `architecture` naming it; off-browser, the fit from facts equals the fit from the header on every tiny fixture (entry 24).
-- **Not run:** any real GGUF repo by id in a browser; Llama 3.2 or any model with a 128k vocabulary in a browser; a 2D-grid dispatch on a real adapter (the WebGPU row kernels past the grid dimension limit ran on lavapipe only); the WebGPU heap clamp in a browser; any other WebGPU adapter or GPU; the WebAssembly tier in a headed browser;
+- images (the browser-gate record, entries 59 and 60), in headless Chromium on Linux, on the WebAssembly tier only. SmolVLM-256M-Instruct's browser check ran on a test build of the browser host that admitted the model ahead of this version. Its first run stopped where a JPEG's image rows, from the package's own decode of the file, were further from transformers' than the check's bound allows (entry 59). The owner then amended the JPEG check to hold to that bound the rows of the reference's own decode of the file, the real file's tokens still checked, and the second run passed (entry 60): on the test page at f32, four low-detail images, the reference decode and a 13-tile high-detail image gave transformers' tokens, with every checked tile's image rows within the bound, in tile order; at bf16, two low-detail images gave transformers' tokens; through `Caldrix.load` in its worker, the four low-detail images and a `Uint8Array` gave the test page's tokens. On the build the package ships: a tiny test vision model through `Caldrix.load` on the WebAssembly tier, token-exact to transformers' tokens at both details, with tile progress, a `Uint8Array` image, a mirrored image giving other tokens, a second turn, a cancel during the tiles and the request refusals (its tokens do not show the order of the tiles or of the rows within one), and `backend: "auto"` falling back from the WebGPU tier's refusal on Dawn/SwiftShader, a CPU.
+- **Not run:** images on the WebGPU tier; `backend: "auto"`'s fallback for a real vision model; a multi-tile image of a real model through `Caldrix.load`; any other high-detail image or a bf16 high-detail image; any real GGUF repo by id in a browser; Llama 3.2 or any model with a 128k vocabulary in a browser; a 2D-grid dispatch on a real adapter (the WebGPU row kernels past the grid dimension limit ran on lavapipe only); the WebGPU heap clamp in a browser; any other WebGPU adapter or GPU; the WebAssembly tier in a headed browser;
   the scalar (non-SIMD) wasm build in a
   browser; real-Hub digest behaviour (the runs used a loopback Hub stand-in); a real Hub listing for a repo id
   (the loopback hub served the pinned snapshots) beyond the Try page's own loads (entry 21); any browser other than
-  Playwright's Chromium and Brave (entry 21); any model beyond SmolLM2-135M-Instruct and the ones in entries 12, 16, 17, 18, 19 and 21;
+  Playwright's Chromium and Brave (entry 21); any model beyond SmolLM2-135M-Instruct and the ones in entries 12, 16, 17, 18, 19, 21, 59 and 60;
   `Caldrix.check` against a real adapter's buffer limit (its unit tests only), against the real Hub, or in any other
   browser or on any other device; `Caldrix.fit` on facts the nightly recorded for a real repo, or on a real adapter. No performance figure is recorded or claimed.
 

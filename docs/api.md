@@ -35,11 +35,12 @@ curl http://localhost:8425/v1/chat/completions \
   and `{"type": "image_url", "image_url": {"url": …, "detail": …}}`; text parts are joined with a newline
   before the template. A part of another type or a malformed one is a `400` naming it
   (`messages[i].content[j]`). Image parts are taken only by a model with a vision tower (`smolvlm-256m`, on
-  the `cpu`, `hip` and `metal` lanes, [serve.md](serve.md#a-vision-model)); on a text model an image part is a `400` at `messages[i].content[j]`, "this model takes
+  the `cpu`, `hip` and `metal` lanes, and in the browser on the wasm tier, [serve.md](serve.md#a-vision-model)); on a text model an image part is a `400` at `messages[i].content[j]`, "this model takes
   text only". Typing `<image>` into a text part is a `400` naming `image placeholder count`.
-- An image URL must be `data:image/png;base64,…`, `data:image/jpeg;base64,…` (`image/jpg` is a spelling of
-  it) or `data:image/webp;base64,…`. The bytes must carry the signature of the type named. `image/gif` and
-  remote URLs are refused; the server never fetches a URL.
+- An image URL must be `data:image/png;base64,…` or `data:image/jpeg;base64,…` (`image/jpg` is a spelling
+  of it). The bytes must carry the signature of the type named. `image/gif` and remote URLs are refused;
+  the server never fetches a URL. A WebP is refused by name, as a `data:image/webp` URL or as a WebP's
+  bytes under another label: `WebP images are not accepted in this build; send a PNG or a JPEG`.
 - `detail` is absent, `auto` or `high` (the image is split into tiles) or `low` (one tile). Any other value
   is a `400`.
 - Image limits, each a `400` naming its number: 8 images a request (`param` `messages`); 4096 pixels on a

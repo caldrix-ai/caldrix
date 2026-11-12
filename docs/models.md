@@ -5,7 +5,7 @@ or a repo id is downloaded into the standard Hugging Face cache and read from th
 accepts dense Llama, Mistral, Qwen2 and Qwen3 checkpoints, the Qwen3 mixture-of-experts architecture
 (`Qwen3MoeForCausalLM`) and Qwen3.5 (`Qwen3_5ForCausalLM`, and `Qwen3_5ForConditionalGeneration` as text
 only) in safetensors, bf16, f32 or f16, and SmolVLM's vision-language architecture
-(`Idefics3ForConditionalGeneration`), which runs on the `cpu`, `hip` and `metal` lanes ([Aliases](#aliases)); f16 weights are computed in bf16 by default, or exactly with
+(`Idefics3ForConditionalGeneration`), which runs on the `cpu`, `hip` and `metal` lanes and in the browser on the wasm tier ([Aliases](#aliases)); f16 weights are computed in bf16 by default, or exactly with
 `--dtype f32`; quantized safetensors checkpoints are refused. Qwen3.5 runs on the `cpu`,
 `hip` and `metal` lanes ([Aliases](#aliases)); `inferno serve` also serves it on `--backend host`, its off-hardware test
 stand-in, which makes no hardware claim. Quantized Ollama tags (Q4_K_M and
@@ -34,8 +34,11 @@ are refused for it.
 
 `smolvlm-256m` (SmolVLM-256M-Instruct, `Idefics3ForConditionalGeneration`) is a vision-language model: it takes
 images as well as text, in `caldrix run` with `-i` and `/image` ([run.md](run.md#images)) and in `caldrix serve`
-as image parts ([api.md](api.md)). It runs on the CPU, HIP and Metal lanes; the browser refuses it by name;
-`caldrix doctor` prints which lanes take images. It is verified at the desk on the
+as image parts ([api.md](api.md)). It runs on the CPU, HIP and Metal lanes, and in the browser on the wasm
+tier through caldrix.js ([caldrix-js.md](caldrix-js.md#images); it has run in Playwright's headless Chromium on
+Linux only, on a test build that admitted it ahead of the release, as [What has run, and
+where](caldrix-js.md#what-has-run-and-where) records); the browser's WebGPU tier refuses it, and under
+`backend: "auto"` the load falls back to the wasm tier. `caldrix doctor` prints which lanes take images. It is verified at the desk on the
 CPU lane (x86-64-v3) by its token gate: greedy tokens of fixture images against the PyTorch reference at f32 and
 bf16 through the engine, and through the server at f32; at bf16 the server's tokens equal the engine's own (the vision
 tower runs in f32 at either `--dtype`; the text model at the `--dtype` given). On the HIP lane its token gate ran on one
