@@ -130,8 +130,10 @@ says the default `--max-batch` is lowered from 8 to 1. On the `hip` lane `infern
 [`POST /v1/images/generations`](api.md#post-v1imagesgenerations) instead of the text endpoints. The
 pipeline's recorded lanes are `cpu` and `metal`, and `--backend auto` takes `cpu` on Linux and `metal` on a
 Mac where the Metal lane is usable ([doctor.md](doctor.md)). The
-Metal lane's record is `caldrix run` on one Apple M1 Max ([run.md](run.md#generating-an-image)): this
-endpoint has not been run on the Metal lane. `caldrix serve flux2-klein-4b` downloads the
+Metal lane's record is on one Apple M1 Max ([run.md](run.md#generating-an-image)): there this endpoint
+answered one request at 256×256, once, and its image was byte for byte the one `caldrix run` wrote. It has
+not been run there with more than one request or with requests at once, nor on another Apple chip or on a
+Mac with less memory than that one. `caldrix serve flux2-klein-4b` downloads the
 alias as `caldrix run` does ([run.md](run.md#generating-an-image)), its memory check counting the text encoder
 kept resident beside the denoiser, then serves the download as a pipeline directory; once downloaded it is
 served from the cache with no request. `caldrix serve owner/name` does the same for a Hugging Face repo

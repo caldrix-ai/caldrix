@@ -76,10 +76,12 @@ it by name on `hip`, and the browser build refuses the alias by name and does no
 at the desk on the CPU lane (x86-64-v3): a 256×256 image in bf16 against
 the PyTorch reference, step by step, and a 512×512 image with no reference. On the Metal lane, on one
 Apple M1 Max, `caldrix run` made a 256×256 image, the same step-by-step comparison with the PyTorch
-reference held at 256×256, and a 512×512 image was made outside `caldrix run` with no reference; 512×512 and 1024×1024 have
-not been run through `caldrix run` there, `caldrix serve`'s image endpoint has not been run on the Metal
-lane, and it has not been run on another Apple chip or on a Mac with less memory than that one. The
-default 1024×1024 has not been run end to end, and nothing about image quality or speed is claimed.
+reference held at 256×256, and a 512×512 image was made outside `caldrix run` with no reference; on that Mac
+`caldrix run` has also made a 512×512 and a default 1024×1024 image, each once, with no reference at those sizes,
+so neither was compared with anything, and `caldrix serve`'s image endpoint answered one request at 256×256,
+once, with an image byte for byte the one `caldrix run` wrote. It has not been run on another Apple chip or on
+a Mac with less memory than that one, and on the CPU lane the default 1024×1024 has not been run end to end.
+Nothing about image quality or speed is claimed.
 
 A Hugging Face repo id is an image pipeline when its file list holds `model_index.json` at its top, and
 by nothing else: `caldrix run <owner/name> -p PROMPT -o OUT.png` looks the repo up once and runs it at

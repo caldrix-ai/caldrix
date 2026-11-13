@@ -173,11 +173,12 @@ the stage's own share; one that could not be read is `unavailable`, and when non
 stdout stays empty.
 
 What has run, at the desk on the CPU lane (x86-64-v3): a 256×256 image in bf16 compared step by step
-with the PyTorch reference, and a 512×512 image made with no reference; the default 1024×1024 has not
-been run end to end. On the Metal lane, on one Apple M1 Max: `caldrix run --backend metal` made a 256×256
+with the PyTorch reference, and a 512×512 image made with no reference; on the CPU lane the default
+1024×1024 has not been run end to end. On the Metal lane, on one Apple M1 Max: `caldrix run --backend metal` made a 256×256
 image in bf16, the same step-by-step comparison with the PyTorch reference held at 256×256, and a 512×512
-image was made outside `caldrix run` with no reference. 512×512 and 1024×1024 have not been run through `caldrix run` on the
-Metal lane, and it has not been run on another Apple chip or on a Mac with less memory than that one.
+image was made outside `caldrix run` with no reference. On that Mac `caldrix run --backend metal` has also made a
+512×512 image and a default 1024×1024 image, each once; there is no reference at those sizes, so neither image
+was compared with anything. The Metal lane has not been run on another Apple chip or on a Mac with less memory than that one.
 No image quality or speed is claimed.
 
 ## Flags

@@ -135,9 +135,10 @@ tokens proposed and accepted. No speed is claimed here.
 A server started on an image pipeline (`caldrix serve` on a directory holding `model_index.json`;
 [serve.md](serve.md#an-image-pipeline)) serves this
 endpoint, `GET /v1/models` and `/healthz` instead of the text endpoints, which answer `400` naming it.
-It makes one PNG from a prompt with FLUX.2 klein 4B on the CPU lane or, on a Mac, the Metal lane; this
-endpoint has not been run on the Metal lane, where the record is `caldrix run` on one Apple M1 Max
-([run.md](run.md#generating-an-image)). The request follows the OpenAI
+It makes one PNG from a prompt with FLUX.2 klein 4B on the CPU lane or, on a Mac, the Metal lane. On the
+Metal lane this endpoint has answered one request at 256×256, once, on one Apple M1 Max, and its image was
+byte for byte the one `caldrix run` wrote there ([run.md](run.md#generating-an-image)); more than one
+request, requests at once, another Apple chip and a Mac with less memory have not been run. The request follows the OpenAI
 Images API's generations shape:
 
 ```sh
@@ -159,7 +160,7 @@ The answer carries the PNG inline, base64-encoded:
 | `n` | absent, `null` or `1` |
 | `size` | `"<W>x<H>"`, each side a multiple of 16 and at most 4096, and `(W/16)·(H/16)` at most 4096 (`"1024x1024"` is the largest square); default `"1024x1024"`; refused, never rounded |
 | `response_format` | absent, `null` or `"b64_json"`; `"url"` is refused: the image is returned inline, never hosted |
-| `seed` | an integer from `0` to `18446744073709551615`; the same seed, prompt and size give the same PNG on this machine and build (tested on a reduced pipeline); drawn fresh when absent |
+| `seed` | an integer from `0` to `18446744073709551615`; the same seed, prompt and size give the same PNG on this machine and build (tested on a reduced pipeline, and on the full pipeline at 256×256 once on one Apple M1 Max, this endpoint against `caldrix run`); drawn fresh when absent |
 
 Any other field is refused by name, and every refusal is a `400` naming the field as `param`, before the
 request is queued. One request is generated at a time; the queue in front of it holds `--queue-depth`
@@ -169,9 +170,11 @@ and a failure's reason, never the prompt.
 
 What has run, at the desk on the CPU lane (x86-64-v3): a 256×256 image in bf16 compared step by step
 with the PyTorch reference (each step nearer the reference's same step, and the image nearer it than
-each of five deliberately broken runs), and a 512×512 image made with no reference. On the Metal lane
-the same comparison held at 256×256 on one Apple M1 Max, outside this endpoint. The default
-1024×1024 has not been run end to end, and no image quality or speed is claimed on either lane. The prompt is padded
+each of five deliberately broken runs), and a 512×512 image made with no reference; on the CPU lane the
+default 1024×1024 has not been run end to end. On the Metal lane the same comparison held at 256×256 on one
+Apple M1 Max, outside this endpoint, and on that Mac `caldrix run` made a 512×512 and a default 1024×1024
+image, each once, with no reference at those sizes, so neither was compared with anything. No image quality or
+speed is claimed on either lane. The prompt is padded
 to 512 tokens and its padding is encoded differently from the reference's, so an image from a prompt
 differs from the reference's more than one from the reference's own prompt encoding does.
 
