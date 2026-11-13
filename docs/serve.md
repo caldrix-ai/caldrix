@@ -139,7 +139,10 @@ kept resident beside the denoiser, then serves the download as a pipeline direct
 served from the cache with no request. `caldrix serve owner/name` does the same for a Hugging Face repo
 whose file list holds `model_index.json` at its top, at the commit that list named. `caldrix` tells a
 pipeline from a text model by the first file list it reads for a text model anyway, so serving a text
-model makes no extra request. The alias and repo-id paths are tested against a local stand-in for the
+model makes no extra request. A pipeline directory
+takes the same memory check before any weight loads; the check is a lower bound ("needs at least"), and a
+pipeline that cannot fit the lane is refused by name. With `--denoiser-weights` a directory's check is
+skipped and one line says so, because the check counts the `transformer/` files that flag replaces. The alias and repo-id paths are tested against a local stand-in for the
 Hub only; no real download of the alias has run.
 
 - The text encoder loads on the first request and stays resident beside the denoiser, so later requests

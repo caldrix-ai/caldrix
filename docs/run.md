@@ -152,10 +152,14 @@ caldrix run owner/name -p "A watercolor of a lighthouse at dawn" -o lighthouse.p
   sampling flags (whatever their value, `--temperature 0` included) are refused by name before anything
   loads.
 - One model is held at a time: the text encoder is released before the denoiser loads.
+- A pipeline directory, the alias and a repo id are checked for the memory the pipeline needs on the
+  chosen lane before any weight loads, and one that cannot fit is refused by name; the memory check is a
+  lower bound ("needs at least"), not a promise that the run fits. With `--denoiser-weights` a
+  directory's check is skipped and one line says so, because the check counts the `transformer/` files
+  that flag replaces.
 - For the alias or a repo id, the pipeline's files are downloaded by a fixed list, with the weight files
   the repo's index files name ([models.md](models.md#image-pipelines)), and its five configuration
-  files are checked, with the memory and disk it needs, before any weight file is fetched; the memory
-  check is a lower bound ("needs at least"), not a promise that the run fits. Once downloaded, the alias
+  files are checked, with the memory and disk it needs, before any weight file is fetched. Once downloaded, the alias
   (pinned to a commit) and a repo id given at a commit run from the cache with no request; a repo id at
   a branch is looked up again, and nothing more is downloaded.
 - A Hugging Face repo id given `-o` or `--size` is looked up once: if its file list holds
