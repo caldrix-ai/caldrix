@@ -42,7 +42,7 @@ model support
   images on nvidia: no
   images on hip: yes (SmolVLM, 64 tokens per 512-px tile)
   images on cpu: yes (SmolVLM, 64 tokens per 512-px tile)
-  image generation on metal: no
+  image generation on metal: yes (FLUX.2 klein 4B, one Apple M1 Max at 256x256)
   image generation on nvidia: no
   image generation on hip: no
   image generation on cpu: yes (FLUX.2 klein 4B, CPU desk record)
@@ -68,10 +68,11 @@ no kernel was launched; `caldrix run` is what shows a lane works
   Then one `images on <lane>:` line per lane, in the lanes' order: `yes` where a model that takes images
   runs on that lane (today SmolVLM, `smolvlm-256m`, on `cpu`, `hip` and `metal`: 64 prompt tokens for each 512-pixel tile), else
   `no` ([run.md](run.md#images)). Then one `image generation on <lane>:` line per lane: `yes` on a lane
-  `--backend auto` may choose to make images from a prompt (today FLUX.2 klein 4B, the `flux2-klein-4b`
-  alias or a pipeline directory, on `cpu`, as verified at the desk on that lane), else `no` (a lane
-  `--backend` admits by flag alone, `metal` for klein, prints `no`) ([run.md](run.md#generating-an-image)). Like the rest of the block, it says what this build supports,
-  not what was probed on this machine.
+  where a run on record made images from a prompt (today FLUX.2 klein 4B, the `flux2-klein-4b` alias or a
+  pipeline directory, on `cpu` and `metal`), with the record named in brackets — `CPU desk record` for the
+  desk's run on the CPU lane, `one Apple M1 Max at 256x256` for the Metal lane's, which is all it covers
+  ([run.md](run.md#generating-an-image)) — else `no`. Like the rest of the block, it says what this build
+  supports, not what was probed on this machine: a Linux machine prints the `metal` line's `yes` too.
 - **The last line** is a reminder: the report comes from probes, and only `caldrix run` shows a lane
   actually works.
 

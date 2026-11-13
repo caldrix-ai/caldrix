@@ -135,8 +135,9 @@ tokens proposed and accepted. No speed is claimed here.
 A server started on an image pipeline (`caldrix serve` on a directory holding `model_index.json`;
 [serve.md](serve.md#an-image-pipeline)) serves this
 endpoint, `GET /v1/models` and `/healthz` instead of the text endpoints, which answer `400` naming it.
-It makes one PNG from a prompt with FLUX.2 klein 4B on the CPU lane (a Mac build accepts
-`--backend metal`, built for the Metal lane and not yet recorded on a device). The request follows the OpenAI
+It makes one PNG from a prompt with FLUX.2 klein 4B on the CPU lane or, on a Mac, the Metal lane; this
+endpoint has not been run on the Metal lane, where the record is `caldrix run` on one Apple M1 Max
+([run.md](run.md#generating-an-image)). The request follows the OpenAI
 Images API's generations shape:
 
 ```sh
@@ -168,8 +169,9 @@ and a failure's reason, never the prompt.
 
 What has run, at the desk on the CPU lane (x86-64-v3): a 256×256 image in bf16 compared step by step
 with the PyTorch reference (each step nearer the reference's same step, and the image nearer it than
-each of five deliberately broken runs), and a 512×512 image made with no reference. The default
-1024×1024 has not been run end to end, and no image quality or speed is claimed. The prompt is padded
+each of five deliberately broken runs), and a 512×512 image made with no reference. On the Metal lane
+the same comparison held at 256×256 on one Apple M1 Max, outside this endpoint. The default
+1024×1024 has not been run end to end, and no image quality or speed is claimed on either lane. The prompt is padded
 to 512 tokens and its padding is encoded differently from the reference's, so an image from a prompt
 differs from the reference's more than one from the reference's own prompt encoding does.
 

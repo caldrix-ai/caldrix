@@ -12,7 +12,7 @@ stand-in, which makes no hardware claim. Quantized Ollama tags (Q4_K_M and
 Q8_0) run on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); on the `hip` lane five
 tags were token-exact in f32 on one MI300X ([Ollama tags](#ollama-tags)). Mistral is accepted
 by the import but has not been verified on hardware. FLUX.2 klein 4B, an image pipeline, makes images
-from a prompt on the `cpu` lane ([Image pipelines](#image-pipelines)).
+from a prompt on the `cpu` and `metal` lanes ([Image pipelines](#image-pipelines)).
 
 ## Aliases
 
@@ -69,13 +69,17 @@ card) is an image pipeline: a text encoder, a denoiser and an autoencoder in one
 `model_index.json` at its top. `caldrix run` makes one PNG from a prompt with it
 ([run.md](run.md#generating-an-image)) and `caldrix serve` serves it
 ([serve.md](serve.md#an-image-pipeline)); a directory holding `model_index.json` is used as it is, by
-`caldrix run` and `caldrix serve` ([serve.md](serve.md#an-image-pipeline)). Its recorded lane is the CPU
-lane, the only lane `--backend auto` takes for it; a Mac build accepts `--backend metal`, built for the
-Metal lane and not yet recorded on a device. `caldrix` refuses it by name on `hip`, and the browser build
-refuses the alias by name and does not list it. It is verified at the desk on the CPU lane (x86-64-v3):
-a 256×256 image in bf16 against
-the PyTorch reference, step by step, and a 512×512 image with no reference. The default 1024×1024 has
-not been run end to end, and nothing about image quality or speed is claimed.
+`caldrix run` and `caldrix serve` ([serve.md](serve.md#an-image-pipeline)). It runs on the CPU and
+Metal lanes: `--backend auto` takes the CPU lane on Linux and the Metal lane on a Mac where the Metal
+lane is usable ([doctor.md](doctor.md)). `caldrix` refuses
+it by name on `hip`, and the browser build refuses the alias by name and does not list it. It is verified
+at the desk on the CPU lane (x86-64-v3): a 256×256 image in bf16 against
+the PyTorch reference, step by step, and a 512×512 image with no reference. On the Metal lane, on one
+Apple M1 Max, `caldrix run` made a 256×256 image, the same step-by-step comparison with the PyTorch
+reference held at 256×256, and a 512×512 image was made outside `caldrix run` with no reference; 512×512 and 1024×1024 have
+not been run through `caldrix run` there, `caldrix serve`'s image endpoint has not been run on the Metal
+lane, and it has not been run on another Apple chip or on a Mac with less memory than that one. The
+default 1024×1024 has not been run end to end, and nothing about image quality or speed is claimed.
 
 A Hugging Face repo id is an image pipeline when its file list holds `model_index.json` at its top, and
 by nothing else: `caldrix run <owner/name> -p PROMPT -o OUT.png` looks the repo up once and runs it at

@@ -122,10 +122,10 @@ image: 512×512 ×13 tiles, 832 rows
 
 An image pipeline — a directory holding `model_index.json` (a diffusers FLUX.2 klein 4B pipeline), the
 `flux2-klein-4b` alias, or a Hugging Face repo id whose file list holds `model_index.json` at its top
-([models.md](models.md#image-pipelines)) — makes one PNG from one prompt. Its recorded lane is `cpu`,
-the only lane `--backend auto` takes for it (`caldrix doctor` prints `image generation on <lane>:` for each
-lane, [doctor.md](doctor.md)); a Mac build accepts `--backend metal`, built for the Metal lane and not yet
-recorded on a device.
+([models.md](models.md#image-pipelines)) — makes one PNG from one prompt. Its recorded lanes are `cpu`
+and `metal`, and `--backend auto` takes `cpu` on Linux and `metal` on a Mac where the Metal lane is
+usable ([doctor.md](doctor.md); `caldrix doctor` prints `image generation on <lane>:` for each lane). What has run on each lane is
+below the stderr lines.
 
 ```text
 caldrix run <pipeline> -p PROMPT -o OUT.png [--size WxH] [--seed N] [--backend auto|cpu|metal] [serving flags]
@@ -146,8 +146,7 @@ caldrix run owner/name -p "A watercolor of a lighthouse at dawn" -o lighthouse.p
   machine and build, the same bytes as `caldrix serve`'s in-process path (tested on a reduced pipeline,
   with no HTTP between; [api.md](api.md#post-v1imagesgenerations)).
   Without it a seed is drawn, and stderr names it.
-- `--backend auto` takes the `cpu` lane, and never `metal`; `hip` is refused by name, and a Mac build
-  accepts an explicit `--backend metal`, built for the Metal lane and not yet recorded on a device.
+- `--backend auto` takes the `cpu` lane on Linux and the `metal` lane on a Mac; `hip` is refused by name.
   `--dtype bf16` (the default) or `f32` sets the text encoder's and the denoiser's type.
 - The chat flags (`-i`, `--system`, `--max-tokens`, `--draft-model`, `--raw`, `--json`) and the text
   sampling flags (whatever their value, `--temperature 0` included) are refused by name before anything
@@ -175,7 +174,11 @@ stdout stays empty.
 
 What has run, at the desk on the CPU lane (x86-64-v3): a 256×256 image in bf16 compared step by step
 with the PyTorch reference, and a 512×512 image made with no reference; the default 1024×1024 has not
-been run end to end. No image quality or speed is claimed.
+been run end to end. On the Metal lane, on one Apple M1 Max: `caldrix run --backend metal` made a 256×256
+image in bf16, the same step-by-step comparison with the PyTorch reference held at 256×256, and a 512×512
+image was made outside `caldrix run` with no reference. 512×512 and 1024×1024 have not been run through `caldrix run` on the
+Metal lane, and it has not been run on another Apple chip or on a Mac with less memory than that one.
+No image quality or speed is claimed.
 
 ## Flags
 
