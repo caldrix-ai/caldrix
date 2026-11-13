@@ -269,9 +269,9 @@ These happen after the model has loaded, so they are not argument errors and do 
 
 ### A backend this build cannot open
 
-> `the CPU lane builds for *-unknown-linux-gnu only`
+> `the CPU lane exists on Linux only`
 
-> `the Metal backend exists only on macOS, built with`
+> `the Metal backend exists only on macOS, in a build with Metal support`
 
 **Cause.** `--backend cpu` on a system that is not Linux, or `--backend metal` on a build that is not macOS with Metal.
 
