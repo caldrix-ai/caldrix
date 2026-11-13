@@ -29,8 +29,8 @@ in f32 and in bf16, and of a 1,100-token prompt, against the PyTorch reference â
 (x86-64-v3), on the AMD lane on one MI300X and on the Metal lane on one Apple M1 Max (64 GiB), through
 the engine. `inferno serve` serves Qwen3.5 on the
 `cpu` lane, on the `hip` lane (one MI300X, single-stream: the default `--max-batch` is lowered to 1), on the `metal` lane (one Apple M1 Max) and on `--backend host` (its off-hardware test stand-in, which makes no hardware claim). `caldrix` runs Qwen3.5 on the
-`cpu`, `hip` and `metal` lanes; the browser refuses it. `caldrix run` ran it on the `hip` lane on one MI300X and on the `metal` lane on one Apple M1 Max; `--max-batch` above 1 and `--weight-budget`
-are refused for it.
+`cpu`, `hip` and `metal` lanes; the browser refuses it. `caldrix run` ran the safetensors model on the `hip` lane on one MI300X and on the `metal` lane on one Apple M1 Max; `--max-batch` above 1 and `--weight-budget`
+are refused for it. A quantized Qwen3.5 GGUF file runs on the `cpu` lane only, a desk reading and not a hardware run: the engine generated eight tokens from one Q6_K file of the 0.8B, token-exact against its references; `inferno serve --backend cpu` opens such a file (checked on a small synthetic one, not served from the real one), and every other lane and the browser refuse it by name.
 
 `smolvlm-256m` (SmolVLM-256M-Instruct, `Idefics3ForConditionalGeneration`) is a vision-language model: it takes
 images as well as text, in `caldrix run` with `-i` and `/image` ([run.md](run.md#images)) and in `caldrix serve`
