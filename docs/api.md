@@ -35,7 +35,7 @@ curl http://localhost:8425/v1/chat/completions \
   and `{"type": "image_url", "image_url": {"url": …, "detail": …}}`; text parts are joined with a newline
   before the template. A part of another type or a malformed one is a `400` naming it
   (`messages[i].content[j]`). Image parts are taken only by a model with a vision tower (`smolvlm-256m`, on
-  the `cpu`, `hip` and `metal` lanes, and in the browser on the wasm tier, [serve.md](serve.md#a-vision-model)); on a text model an image part is a `400` at `messages[i].content[j]`, "this model takes
+  the `cpu`, `hip` and `metal` lanes, and in the browser on both tiers from caldrix.js 0.16.0, not yet published (the published version on the wasm tier only), [serve.md](serve.md#a-vision-model)); on a text model an image part is a `400` at `messages[i].content[j]`, "this model takes
   text only". Typing `<image>` into a text part is a `400` naming `image placeholder count`.
 - An image URL must be `data:image/png;base64,…` or `data:image/jpeg;base64,…` (`image/jpg` is a spelling
   of it). The bytes must carry the signature of the type named. `image/gif` and remote URLs are refused;
