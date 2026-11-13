@@ -20,7 +20,7 @@ not been verified is listed as not verified on hardware; everything else is not 
 | `cpu` | Linux on an `x86-64-v3` CPU, with a C compiler (`cc`) on `PATH` | supported | verified on hardware at `x86-64-v3` with small models; 8B models have not been verified on this lane |
 | `metal` | other Apple silicon on macOS | accepted by the binary, not verified on hardware | the lane runs on any Metal device it finds; no other chip has been verified |
 | `cpu` | Linux on an `x86-64-v2` or `x86-64-v4` CPU | accepted by the binary, not verified on hardware | `caldrix doctor` reports the lane usable at these rows; they have not been verified |
-| none | NVIDIA GPUs | not supported | `caldrix doctor` names an NVIDIA device when it finds one |
+| `nvidia` | NVIDIA GPUs | not supported | `caldrix doctor`'s `nvidia` line refuses every card; with the NVIDIA driver installed it names the card and its compute capability |
 | `hip` | AMD GPUs other than `gfx942` | not supported | Inferno generates GPU code for `gfx942` only |
 | `cpu` | the CPU lane on macOS | not supported | the lane builds for Linux only |
 

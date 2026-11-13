@@ -1,8 +1,9 @@
 # caldrix doctor
 
-`caldrix doctor` reports, for each of the three lanes (Apple GPU through Metal, AMD GPU through HIP, the
-CPU), whether this machine can use it and why, then what Inferno does not run. It reports only what it
-probed, launches no kernel, and exits with status 1 when no lane is usable.
+`caldrix doctor` reports, for each of the four lanes (Apple GPU through Metal, NVIDIA GPU, AMD GPU through
+HIP, the CPU), whether this machine can use it and why, then what models Inferno runs on which lane. It
+reports only what it probed, launches no kernel, and exits with status 1 when no lane is usable. NVIDIA GPUs
+are not supported: the `nvidia` line says `no` on every machine.
 
 ## Run it
 
@@ -10,32 +11,41 @@ probed, launches no kernel, and exits with status 1 when no lane is usable.
 caldrix doctor
 ```
 
-On a Linux x86-64 machine without an AMD GPU, the v0.1.0 release installed with `install.sh`
-printed the output below, with one change: its last two blocks, `model support` and `not supported`,
-are shown as the current binary prints them, not as v0.1.0 did. Later versions print more than this
-capture shows: an `index` section, an `ollama cache` section and a `dense snapshots` section, and each
-lane's capability vector (`features=` on `cpu` and `hip`, `family=` and `simdgroup_bf16=` on `metal`).
+On a Linux x86-64 machine with neither an AMD GPU nor the NVIDIA driver, a build of the current source
+(hence `unknown commit`) printed the output below. Three kinds of machine-specific text are replaced by
+`…`: the `nvidia` line's loader message after `detail:` (it names the driver library file the loader
+looked for and why it failed), the `cpu` line's path to `cc` and its memory readings, and the cache
+directories under the `index` and `ollama cache` blocks.
 
 ```text
-caldrix 0.1.0 (1b2f29dd1c13, x86_64-linux)
+caldrix 0.2.0 (unknown commit, x86_64-linux)
 
 lanes
-  metal  no      the Metal lane exists on macOS only; speculation=no
-  hip    no      the HIP runtime did not load: dlopen libamdhip64.so: libamdhip64.so: cannot open shared object file: No such file or directory; speculation=no
-  cpu    usable  x86-64-v3 (12 physical cores, cgroup quota 8); cc at /usr/bin/cc; libm glibc 2.41; speculation=yes
+  metal  no      the Metal lane exists on macOS only; speculation=yes
+  nvidia no      no NVIDIA driver library; detail: …; speculation=no
+  hip    no      the HIP runtime did not load: dlopen libamdhip64.so: libamdhip64.so: cannot open shared object file: No such file or directory; speculation=yes
+  cpu    usable  x86-64-v3 (12 physical cores, cgroup quota 8) features=sse4_2,popcnt,avx,avx2,fma,f16c,bmi1,bmi2,movbe,lzcnt; cc at …; libm glibc 2.42; …; speculation=yes
+
+index
+  absent   no manifest at …
+
+ollama cache
+  …: empty
+
+dense snapshots
+  none
 
 model support
-  Inferno runs quantized GGUF (Q4_K_M, Q8_0) on the metal and hip lanes and on the cpu lane (a desk reading, not a run); quantized safetensors checkpoints other than bitsandbytes nf4 (densified at fetch) and NVIDIA GPUs are not supported
+  Inferno runs quantized GGUF (Q4_K_M, Q8_0) on the metal and hip lanes and on the cpu lane (a desk reading, not a run); quantized safetensors checkpoints other than bitsandbytes nf4 (densified at fetch) are not supported
   Inferno runs Qwen3.5 on the cpu lane (x86-64-v3; a desk reading, not a run), the hip lane (one MI300X) and the metal lane (one Apple M1 Max)
   images on metal: yes (SmolVLM, 64 tokens per 512-px tile)
+  images on nvidia: no
   images on hip: yes (SmolVLM, 64 tokens per 512-px tile)
   images on cpu: yes (SmolVLM, 64 tokens per 512-px tile)
   image generation on metal: no
+  image generation on nvidia: no
   image generation on hip: no
   image generation on cpu: yes (FLUX.2 klein 4B, CPU desk record)
-
-not supported
-  none
 
 no kernel was launched; `caldrix run` is what shows a lane works
 ```
@@ -44,12 +54,15 @@ no kernel was launched; `caldrix run` is what shows a lane works
 
 - **The first line** is `caldrix --version`: the version, the commit the binary was built from
   (`unknown commit` for a build outside the release script) and the platform.
-- **`lanes`** has one line per lane, in the order `--backend auto` tries them: `metal`, `hip`, `cpu`.
-  Each says `usable` with what was found, or `no` with the reason. `caldrix run` and `caldrix serve`
-  with `--backend auto` (the default) take the first usable lane.
+- **`lanes`** has one line per lane, in the order `--backend auto` tries them: `metal`, `nvidia`, `hip`,
+  `cpu`. Each says `usable` with what was found, or `no` with the reason. `caldrix run` and `caldrix serve`
+  with `--backend auto` (the default) take the first usable lane; the `nvidia` line is never usable, so
+  `auto` never takes it.
 - **`speculation=yes` or `speculation=no`** ends each lane line: whether the lane can check a draft model's
   guesses, so `--draft-model` can speculate there ([run.md](run.md#speculative-decoding)). It reports what the
-  build supports, not a measurement; today `cpu` and `hip` say `yes`.
+  build supports, not a measurement; today `metal`, `hip` and `cpu` say `yes` and `nvidia` says `no`.
+- **The `index`, `ollama cache` and `dense snapshots` blocks** say what `caldrix` found in its caches on
+  disk; `doctor` reads them and makes no request.
 - **`model support`** says which model formats Inferno runs on which lanes (quantized GGUF) and where Qwen3.5
   (`Qwen3_5ForCausalLM`) runs: `caldrix` runs it on the `cpu`, `hip` and `metal` lanes ([models.md](models.md#aliases)).
   Then one `images on <lane>:` line per lane, in the lanes' order: `yes` where a model that takes images
@@ -59,8 +72,6 @@ no kernel was launched; `caldrix run` is what shows a lane works
   alias or a pipeline directory, on `cpu`, as verified at the desk on that lane), else `no` (a lane
   `--backend` admits by flag alone, `metal` for klein, prints `no`) ([run.md](run.md#generating-an-image)). Like the rest of the block, it says what this build supports,
   not what was probed on this machine.
-- **`not supported`** lists what the probes found that Inferno does not run. When a device under `/sys/class/drm`
-  reports NVIDIA's vendor id, a line says an NVIDIA device is present and not supported; otherwise it reads `none`.
 - **The last line** is a reminder: the report comes from probes, and only `caldrix run` shows a lane
   actually works.
 
@@ -73,6 +84,23 @@ no kernel was launched; `caldrix run` is what shows a lane works
   built without the `metal` feature.
 - A Metal device. When the device query fails, the line reads `no Metal device:` and the error.
 - When usable, the line names the device. The working-set limit is not probed.
+
+### `nvidia`
+
+No NVIDIA GPU is supported: the line says `no` on every machine, and `--backend nvidia` is refused with the
+same reason before anything is downloaded. What the line names is what `doctor` read:
+
+- Linux. On any other system: `the NVIDIA lane exists on Linux only`.
+- The NVIDIA driver library. When it does not load, the line reads `no NVIDIA driver library` and the
+  loader's message after `detail:`. `INFERNO_NVIDIA_DRIVER` names the library by absolute path instead; a
+  relative value is refused by name and nothing is loaded.
+- When the driver loads and sees no card: `the NVIDIA driver reports no device`. When a driver call fails:
+  `the NVIDIA driver failed`, with the failed call's status and name after `detail:`.
+- When it sees a card, the line names it, its compute capability and why that capability is not admitted
+  (no NVIDIA card has a recorded run), then the driver version and the card's memory.
+
+`caldrix doctor` and `--backend nvidia` load the driver library to read the card; `--backend auto` and the
+other lanes do not, and `auto`'s refusal lists the lane as `no NVIDIA card is admitted yet`.
 
 ### `hip`
 
