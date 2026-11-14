@@ -125,6 +125,14 @@ type Kind = "probe" | "fit" | "architecture" | "fetch" | "digest" | "validate" |
 This section describes caldrix.js 0.16.0, which is not yet published: the published version takes
 images on the wasm tier only.
 
+A quantized Qwen3.5 GGUF file loads by its Hub repo id and file name on the WebAssembly tier only
+(`Caldrix.load("unsloth/Qwen3.5-0.8B-GGUF", { file: "Qwen3.5-0.8B-Q6_K.gguf" })`; there is no alias for it).
+The WebGPU tier has none of this model's kernels: `backend: "auto"` uses the WebAssembly tier and
+`backend: "webgpu"` is refused by name, as is a safetensors Qwen3.5 checkpoint on both tiers. Checked once, in
+headless Chromium on a CPU, on that one Q6_K file: its reference's eight tokens, at a 64-row context and at the
+default context, which is lowered to fit the browser's memory (the browser-gate record, entry 68). No device, no
+other file and no speed has been measured.
+
 `smolvlm-256m` (SmolVLM-256M-Instruct, a vision-language model) runs in the browser on both tiers:
 `chat` takes images as well as text, and `backend: "auto"` no longer falls back to the wasm tier for it.
 On the wasm tier it has run in Playwright's headless Chromium on Linux (the browser-gate record, entries 59
