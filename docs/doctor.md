@@ -2,8 +2,8 @@
 
 `caldrix doctor` reports, for each of the four lanes (Apple GPU through Metal, NVIDIA GPU, AMD GPU through
 HIP, the CPU), whether this machine can use it and why, then what models Inferno runs on which lane. It
-reports only what it probed, launches no kernel, and exits with status 1 when no lane is usable. NVIDIA GPUs
-are not supported: the `nvidia` line says `no` on every machine.
+reports only what it probed, launches no kernel, and exits with status 1 when no lane is usable. One NVIDIA
+compute capability, 6.1, is accepted, by `--backend nvidia` only; the `nvidia` line says `no` for every other card.
 
 ## Run it
 
@@ -39,6 +39,7 @@ model support
   Inferno runs quantized GGUF (Q4_K_M, Q8_0) on the metal and hip lanes and on the cpu lane (a desk reading, not a run); quantized safetensors checkpoints other than bitsandbytes nf4 (densified at fetch) are not supported
   Inferno runs Qwen3.5 on the cpu lane (x86-64-v3; a desk reading, not a run), the hip lane (one MI300X) and the metal lane (one Apple M1 Max)
   Inferno runs a quantized Qwen3.5 file on the cpu lane (x86-64-v3; a desk reading, not a run) and the metal lane (one Apple M1 Max)
+  Inferno runs a dense checkpoint on the nvidia lane by --backend nvidia, on compute capability 6.1 only (the engine's gates held on one GTX 1080; caldrix run and serve are not recorded on a card); quantized, Qwen3.5 and vision models are refused there
   images on metal: yes (SmolVLM, 64 tokens per 512-px tile)
   images on nvidia: no
   images on hip: yes (SmolVLM, 64 tokens per 512-px tile)
@@ -55,10 +56,10 @@ no kernel was launched; `caldrix run` is what shows a lane works
 
 - **The first line** is `caldrix --version`: the version, the commit the binary was built from
   (`unknown commit` for a build outside the release script) and the platform.
-- **`lanes`** has one line per lane, in the order `--backend auto` tries them: `metal`, `nvidia`, `hip`,
-  `cpu`. Each says `usable` with what was found, or `no` with the reason. `caldrix run` and `caldrix serve`
-  with `--backend auto` (the default) take the first usable lane; the `nvidia` line is never usable, so
-  `auto` never takes it.
+- **`lanes`** has one line per lane: `metal`, `nvidia`, `hip`, `cpu`. Each says `usable` with what was
+  found, or `no` with the reason. `caldrix run` and `caldrix serve` with `--backend auto` (the default) take
+  the first usable lane of `metal`, `hip` and `cpu`, in that order; `auto` never takes the `nvidia` lane,
+  usable or not.
 - **`speculation=yes` or `speculation=no`** ends each lane line: whether the lane can check a draft model's
   guesses, so `--draft-model` can speculate there ([run.md](run.md#speculative-decoding)). It reports what the
   build supports, not a measurement; today `metal`, `hip` and `cpu` say `yes` and `nvidia` says `no`.
@@ -67,6 +68,7 @@ no kernel was launched; `caldrix run` is what shows a lane works
 - **`model support`** says which model formats Inferno runs on which lanes (quantized GGUF) and where Qwen3.5
   (`Qwen3_5ForCausalLM`) runs: `caldrix` runs it on the `cpu`, `hip` and `metal` lanes ([models.md](models.md#aliases)).
   The line after it is the quantized Qwen3.5 file's: the `cpu` lane, a desk reading, and the `metal` lane, where the engine's token gate ran it once on one Apple M1 Max.
+  The next line is the `nvidia` lane's: what ran on an NVIDIA card (Inferno's own tests, on one GeForce GTX 1080) and what did not.
   Then one `images on <lane>:` line per lane, in the lanes' order: `yes` where a model that takes images
   runs on that lane (today SmolVLM, `smolvlm-256m`, on `cpu`, `hip` and `metal`: 64 prompt tokens for each 512-pixel tile), else
   `no` ([run.md](run.md#images)). Then one `image generation on <lane>:` line per lane: `yes` on a lane
@@ -90,8 +92,12 @@ no kernel was launched; `caldrix run` is what shows a lane works
 
 ### `nvidia`
 
-No NVIDIA GPU is supported: the line says `no` on every machine, and `--backend nvidia` is refused with the
-same reason before anything is downloaded. What the line names is what `doctor` read:
+One compute capability, 6.1, is accepted: on such a card the line says `usable`, and `--backend nvidia` runs
+a dense model there. Inferno's kernel and token tests passed on one GeForce GTX 1080 with a small dense
+model; `caldrix run` and `caldrix serve` themselves have not been run on an NVIDIA card, and quantized,
+Qwen3.5 and image models are refused on this lane. For every other card the line says `no`, and `--backend
+nvidia` is refused with the same reason before anything is downloaded. What the line names is what `doctor`
+read:
 
 - Linux. On any other system: `the NVIDIA lane exists on Linux only`.
 - The NVIDIA driver library. When it does not load, the line reads `no NVIDIA driver library` and the
@@ -99,11 +105,14 @@ same reason before anything is downloaded. What the line names is what `doctor` 
   relative value is refused by name and nothing is loaded.
 - When the driver loads and sees no card: `the NVIDIA driver reports no device`. When a driver call fails:
   `the NVIDIA driver failed`, with the failed call's status and name after `detail:`.
-- When it sees a card, the line names it, its compute capability and why that capability is not admitted
-  (no NVIDIA card has a recorded run), then the driver version and the card's memory.
+- When it sees a card of compute capability 6.1, the line says `usable` and names the card and its
+  capability, then `chosen by --backend nvidia only`, the driver version and the card's memory.
+- When it sees any other card, the line names it, its compute capability and why that capability is not
+  admitted (no card of that capability has a recorded run), then the driver version and the card's memory.
 
 `caldrix doctor` and `--backend nvidia` load the driver library to read the card; `--backend auto` and the
-other lanes do not, and `auto`'s refusal lists the lane as `no NVIDIA card is admitted yet`.
+other lanes do not, and `auto`'s refusal lists the lane as `auto does not choose the NVIDIA lane; --backend
+nvidia names it`.
 
 ### `hip`
 

@@ -40,7 +40,7 @@ Every refusal caldrix prints, with its cause and its fix. Each quoted message is
 
 > `no usable lane (`
 
-**Cause.** `--backend auto` (the default for `run` and `serve`) tried `metal`, `nvidia`, `hip` and `cpu` in turn and every one was refused. The message lists each lane's reason, one per line; the `nvidia` line reads `no NVIDIA card is admitted yet` on every machine, because no NVIDIA GPU is supported.
+**Cause.** `--backend auto` (the default for `run` and `serve`) tried `metal`, `hip` and `cpu` in turn and every one was refused. The message lists each lane's reason, one per line; the `nvidia` line reads `auto does not choose the NVIDIA lane; --backend nvidia names it` on every machine, because `auto` never takes that lane.
 
 **Fix.** Read the reasons below; the lane closest to your hardware is the one to fix. `caldrix doctor` shows the full report, and `--backend cpu` is the lane for a machine with no supported GPU.
 
@@ -209,7 +209,7 @@ browser names the repo first and refuses before the first weight file.
 
 **Cause.** `--port`, `--host`, `--admin` or `--admin-port` was given to `run`; or `--model-dir`; or `--backend host`.
 
-**Fix.** Use `caldrix serve` for HTTP flags. Give the model as the first argument. Choose `auto`, `hip`, `metal` or `cpu` for `--backend`; `nvidia` is accepted as a value and refuses every card, since no NVIDIA GPU is supported ([run.md](run.md#refused-flags)).
+**Fix.** Use `caldrix serve` for HTTP flags. Give the model as the first argument. Choose `auto`, `hip`, `metal` or `cpu` for `--backend`; `nvidia` is accepted as a value and refuses every card but one of compute capability 6.1 ([run.md](run.md#refused-flags)).
 
 ### A bad value
 

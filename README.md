@@ -45,7 +45,8 @@ not been verified is listed as not verified on hardware; everything else is not 
 | `cpu` | Linux on an `x86-64-v3` CPU, with a C compiler (`cc`) on `PATH` | supported | verified on hardware at `x86-64-v3` with small models; 8B models have not been verified on this lane |
 | `metal` | other Apple silicon on macOS | accepted by the binary, not verified on hardware | the lane runs on any Metal device it finds; no other chip has been verified |
 | `cpu` | Linux on an `x86-64-v2` or `x86-64-v4` CPU | accepted by the binary, not verified on hardware | `caldrix doctor` reports the lane usable at these rows; they have not been verified |
-| `nvidia` | NVIDIA GPUs | not supported | `caldrix doctor`'s `nvidia` line refuses every card; with the NVIDIA driver installed it names the card and its compute capability |
+| `nvidia` | an NVIDIA GPU of compute capability 6.1 on Linux, with the NVIDIA driver, by `--backend nvidia` | accepted by the binary, not verified on hardware | Inferno's kernel and token tests passed on one GeForce GTX 1080 with a small dense model; `caldrix run` and `caldrix serve` have not been run on an NVIDIA GPU. `--backend auto` never chooses this lane, and quantized, Qwen3.5 and image models are refused on it |
+| `nvidia` | NVIDIA GPUs of any other compute capability | not supported | `caldrix doctor`'s `nvidia` line names the card and its compute capability and refuses it |
 | `hip` | AMD GPUs other than `gfx942` | not supported | Inferno generates GPU code for `gfx942` only |
 | `cpu` | the CPU lane on macOS | not supported | the lane builds for Linux only |
 
