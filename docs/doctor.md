@@ -38,7 +38,7 @@ dense snapshots
 model support
   Inferno runs quantized GGUF (Q4_K_M, Q8_0) on the metal and hip lanes and on the cpu lane (a desk reading, not a run); quantized safetensors checkpoints other than bitsandbytes nf4 (densified at fetch) are not supported
   Inferno runs Qwen3.5 on the cpu lane (x86-64-v3; a desk reading, not a run), the hip lane (one MI300X) and the metal lane (one Apple M1 Max)
-  Inferno runs a quantized Qwen3.5 file on the cpu lane (x86-64-v3; a desk reading, not a run)
+  Inferno runs a quantized Qwen3.5 file on the cpu lane (x86-64-v3; a desk reading, not a run) and the metal lane (one Apple M1 Max)
   images on metal: yes (SmolVLM, 64 tokens per 512-px tile)
   images on nvidia: no
   images on hip: yes (SmolVLM, 64 tokens per 512-px tile)
@@ -66,7 +66,7 @@ no kernel was launched; `caldrix run` is what shows a lane works
   disk; `doctor` reads them and makes no request.
 - **`model support`** says which model formats Inferno runs on which lanes (quantized GGUF) and where Qwen3.5
   (`Qwen3_5ForCausalLM`) runs: `caldrix` runs it on the `cpu`, `hip` and `metal` lanes ([models.md](models.md#aliases)).
-  The line after it is the quantized Qwen3.5 file's: the `cpu` lane only, a desk reading.
+  The line after it is the quantized Qwen3.5 file's: the `cpu` lane, a desk reading, and the `metal` lane, where the engine's token gate ran it once on one Apple M1 Max.
   Then one `images on <lane>:` line per lane, in the lanes' order: `yes` where a model that takes images
   runs on that lane (today SmolVLM, `smolvlm-256m`, on `cpu`, `hip` and `metal`: 64 prompt tokens for each 512-pixel tile), else
   `no` ([run.md](run.md#images)). Then one `image generation on <lane>:` line per lane: `yes` on a lane
