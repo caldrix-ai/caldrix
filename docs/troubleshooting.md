@@ -34,13 +34,13 @@ Every refusal caldrix prints, with its cause and its fix. Each quoted message is
 
 ## `caldrix doctor` lanes
 
-`caldrix doctor` prints one line per lane, and `--backend auto` takes the first lane that says `usable` ([doctor.md](doctor.md)). A line saying `no` carries one of these reasons. Nothing in `doctor` launches a kernel.
+`caldrix doctor` prints one line per lane, and `--backend auto` takes the first lane that says `usable`; it takes the `nvidia` lane only for a dense Llama-family model in a local directory that fits the GPU's free memory, or as the last resort when no other lane is usable ([doctor.md](doctor.md#nvidia)). A line saying `no` carries one of these reasons. Nothing in `doctor` launches a kernel.
 
 ### No usable lane
 
 > `no usable lane (`
 
-**Cause.** `--backend auto` (the default for `run` and `serve`) tried `metal`, `hip` and `cpu` in turn and every one was refused. The message lists each lane's reason, one per line; the `nvidia` line reads `auto does not choose the NVIDIA lane; --backend nvidia names it` on every machine, because `auto` never takes that lane.
+**Cause.** `--backend auto` (the default for `run` and `serve`) found no lane it could use. The message lists each lane's reason, one per line. The `nvidia` line says why `auto` did not use an NVIDIA GPU for this command: what the driver reported, in the words `caldrix doctor` prints (no driver library, no device, a card of a compute capability that is not accepted); or what keeps this model or command off the GPU under `auto` (its class, a flag, a fit in the GPU's free memory that does not hold or cannot be worked out, an Ollama reference, a `caldrix pool` member). A reason that ends `--backend nvidia names the lane` does not bind the explicit flag.
 
 **Fix.** Read the reasons below; the lane closest to your hardware is the one to fix. `caldrix doctor` shows the full report, and `--backend cpu` is the lane for a machine with no supported GPU.
 
@@ -209,7 +209,7 @@ browser names the repo first and refuses before the first weight file.
 
 **Cause.** `--port`, `--host`, `--admin` or `--admin-port` was given to `run`; or `--model-dir`; or `--backend host`.
 
-**Fix.** Use `caldrix serve` for HTTP flags. Give the model as the first argument. Choose `auto`, `hip`, `metal` or `cpu` for `--backend`; `nvidia` is accepted as a value and refuses every card but one of compute capability 6.1 ([run.md](run.md#refused-flags)).
+**Fix.** Use `caldrix serve` for HTTP flags. Give the model as the first argument. Choose `auto`, `hip`, `metal`, `nvidia` or `cpu` for `--backend`; `nvidia` refuses every card but one of compute capability 6.1, and `auto` uses such a card only for a dense Llama-family model in a local directory, or when no other lane is usable ([run.md](run.md#refused-flags), [doctor.md](doctor.md#nvidia)).
 
 ### A bad value
 

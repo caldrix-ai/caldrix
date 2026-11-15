@@ -195,7 +195,7 @@ No image quality or speed is claimed.
 | `-i IMAGE`, `--image IMAGE` | attach a PNG or JPEG file to the first message; repeatable, up to 8 ([Images](#images)) | none |
 | `--max-tokens N` | stop after `N` new tokens (a positive integer) | until the end-of-sequence token or a full context; from v0.1.2, 256 tokens for a model without a chat template |
 | `--ctx N` | the compiled context length, in tokens | `2048` |
-| `--backend auto\|hip\|metal\|cpu` | the lane: AMD GPU, Apple GPU or CPU | `auto`: the first usable of `metal`, `hip`, `cpu` ([doctor.md](doctor.md)) |
+| `--backend auto\|hip\|metal\|cpu` | the lane: AMD GPU, Apple GPU or CPU | `auto`: the first usable of `metal`, `hip`, `cpu`; ahead of `hip` and `cpu`, an NVIDIA GPU for a dense Llama-family model in a local directory that fits its free memory ([doctor.md](doctor.md#nvidia)) |
 | `--draft-model DIR\|ALIAS\|REPO` | speculate with this draft model: a directory, an alias or a Hugging Face repo ([Speculative decoding](#speculative-decoding)) | none |
 | `--temperature T` | sample the next token at temperature `T` (finite, `>= 0`; `0` picks the most likely token) | `0` |
 | `--top-k N` | keep only the `N` most likely tokens (`0` keeps all) | `0` |
