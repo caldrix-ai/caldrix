@@ -114,7 +114,9 @@ NVIDIA driver, `caldrix run` and `caldrix serve` under `auto` use the GPU in two
 
 Everything else keeps the lane it has on a machine with no NVIDIA GPU. While another lane is usable that
 is: every model named by Hugging Face repository, alias or Ollama reference, and a directory of the Qwen3,
-Qwen2 or Mistral class (no token test of those has run on an NVIDIA GPU). In both cases it is also:
+Qwen2 or Mistral class (`auto` does not prefer the GPU for those yet: Inferno's token test has run on an
+NVIDIA GPU for one Qwen3 and one Qwen2 model, `caldrix` itself has run neither there, and no Mistral model
+has run there). In both cases it is also:
 quantized, Qwen3.5 and image models; a GGUF file; Ollama references; `caldrix pool` members;
 mixture-of-experts models; a model with an adapter; a model that uses the mish activation; Hugging Face
 repositories of the Llama class, because a repository does not state its activation before the download; a
