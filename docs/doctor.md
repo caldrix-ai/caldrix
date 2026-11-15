@@ -14,7 +14,7 @@ caldrix doctor
 On a Linux x86-64 machine with neither an AMD GPU nor the NVIDIA driver, a build of the current source
 (hence `unknown commit`) printed the output below. Three kinds of machine-specific text are replaced by
 `…`: the `nvidia` line's loader message after `detail:` (it names the driver library file the loader
-looked for and why it failed), the `cpu` line's path to `cc` and its memory readings, and the cache
+looked for and why it failed), the `cpu` line's path to its linker and its memory readings, and the cache
 directories under the `index` and `ollama cache` blocks.
 
 ```text
@@ -24,7 +24,7 @@ lanes
   metal  no      the Metal lane exists on macOS only; speculation=yes
   nvidia no      no NVIDIA driver library; detail: …; speculation=no
   hip    no      the HIP runtime did not load: dlopen libamdhip64.so: libamdhip64.so: cannot open shared object file: No such file or directory; speculation=yes
-  cpu    usable  x86-64-v3 (12 physical cores, cgroup quota 8) features=sse4_2,popcnt,avx,avx2,fma,f16c,bmi1,bmi2,movbe,lzcnt; cc at …; libm glibc 2.42; …; speculation=yes
+  cpu    usable  x86-64-v3 (12 physical cores, cgroup quota 8) features=sse4_2,popcnt,avx,avx2,fma,f16c,bmi1,bmi2,movbe,lzcnt; ld.lld at …; libm glibc 2.42; …; speculation=yes
 
 index
   absent   no manifest at …
@@ -131,9 +131,12 @@ nvidia names it`.
 - Linux. On any other system: `the CPU lane is built for Linux only`.
 - An x86-64 instruction set at `x86-64-v2` or above. Below that: `this host is below
   x86-64-v2; the CPU lane cannot run here`.
-- A C compiler, `cc`, on `PATH`: the lane links its kernels with it when the model loads.
+- A linker: the lane links its kernels when the model loads, with `ld.lld` (the `INFERNO_LLD` variable, else
+  the `ld.lld` installed beside `caldrix`, else one on `PATH`) or, when there is none, with a C compiler
+  named `cc` on `PATH`. With neither: `no linker: the CPU lane links its kernels at load, and neither
+  ld.lld (beside caldrix, in INFERNO_LLD or on PATH) nor cc is found`.
 - When usable, the line names the instruction-set row, the physical cores (and the cgroup CPU quota
-  when one is set, as in a container), where `cc` is, and the libm version.
+  when one is set, as in a container), where the linker is (`ld.lld at …`, else `cc at …`), and the libm version.
 
 ## Exit status
 

@@ -80,11 +80,11 @@ Every refusal caldrix prints, with its cause and its fix. Each quoted message is
 
 > `this host is below x86-64-v2; the CPU lane cannot run here`
 
-> `no C compiler: the CPU lane links its kernels with cc at load, and cc is not on PATH`
+> `no linker: the CPU lane links its kernels at load, and neither ld.lld (beside caldrix, in INFERNO_LLD or on PATH) nor cc is found`
 
-**Cause.** Not Linux; a processor below the x86-64-v2 instruction-set level; or no C compiler named `cc` on `PATH`, which the CPU lane needs when it loads a model.
+**Cause.** Not Linux; a processor below the x86-64-v2 instruction-set level; or no linker: the CPU lane links its kernels when it loads a model, with the `ld.lld` shipped beside `caldrix` or with a C compiler named `cc` on `PATH`, and found neither.
 
-**Fix.** Run on Linux x86-64 with a newer processor, and install a C compiler (`gcc` or `clang`, provided as `cc`). See [doctor.md](doctor.md#cpu).
+**Fix.** Run on Linux x86-64 with a newer processor, and keep the `ld.lld` that the release puts beside `caldrix` where it is, or install a C compiler (`gcc` or `clang`, provided as `cc`). See [doctor.md](doctor.md#cpu).
 
 ## Model download and import
 
