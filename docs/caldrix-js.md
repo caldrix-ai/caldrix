@@ -122,7 +122,7 @@ type Kind = "probe" | "fit" | "architecture" | "fetch" | "digest" | "validate" |
 
 ## Images
 
-This section describes caldrix.js 0.17.0, which is not yet published: the published version takes
+This section describes caldrix.js 0.18.0, which is not yet published: the published version takes
 images on the wasm tier only.
 
 A quantized Qwen3.5 GGUF file loads by its Hub repo id and file name on the WebAssembly tier only
@@ -186,6 +186,8 @@ interface LoadOptions {
   file?: string;
   dtype?: "f32" | "bf16";
   maxContext?: number;
+  memory?: "single" | "split";
+  weightMemoryBytes?: number;
   storage?: "auto" | "f32";
   signal?: AbortSignal;
   assets?: { worker?: string | URL; hostWasm?: string | URL; fallback?: boolean; cdn?: string | URL };
@@ -212,6 +214,19 @@ interface LoadOptions {
   is satisfied: nothing is narrowed, and the weights stay in their blocks. `doctor().storage` reports it
   (`"blocks"` for a quantized alias, `null` on wasm). `storage: "f32"` with `backend: "wasm"` is refused.
 - **`maxContext`**: the context length to load at; see [the default context](#the-default-context).
+- **`memory`**: where the wasm tier places a GGUF file's weights. Absent (the default), they go in the one
+  memory whenever the model fits it; a single GGUF file that does not fit one memory has its weights placed in
+  several memories (up to four) when the browser has multi-memory, and is refused before its body is downloaded when it does not (the message
+  says the browser lacks multi-memory when the model's total is what does not fit). `"single"` asks for the one memory. `"split"` places the weights in
+  several memories beside it, created before the file's body is requested; it needs a browser with
+  multi-memory, and a weight memory the browser cannot create is a `fit` error naming it. Only a single
+  GGUF file on the wasm tier can be split: any other load given `"split"` is a `request` error naming it;
+  under `backend: "auto"` the WebGPU tier's refusal moves the load to the wasm tier, as its other refusals do (this ran
+  on a software adapter, not a GPU). A split load's `doctor().line` ends with `, memory: split, ` and the number of weight memories; a one-memory
+  load's line is unchanged. Placing weights in several memories has run in headless Chromium on a small test
+  file only (the browser-gate record, entry 71); no real model and no file past 4 GiB has been loaded this way.
+- **`weightMemoryBytes`**: for diagnosis, the bytes each weight memory of a `memory: "split"` load may hold
+  (a multiple of 64 from 128 bytes to 4 GiB; the default is 4 GiB). Refused without `memory: "split"`.
 - **`file`**: the GGUF file to load from a repo id, by its name at the repo's top level (`"model-Q4_K_M.gguf"`). A
   repo whose listing has no `config.json` with safetensors weights, and a GGUF file at its top level, is a GGUF repo, and loading it without `file` is a
   `request` error that names the candidate files (`mmproj*` files and sharded `-NNNNN-of-NNNNN.gguf` files are never
@@ -296,6 +311,9 @@ unknown or missing key, a table past the GGUF reader's caps) are `validate`; a f
 limits is `fit`, and a worker that cannot start or answers out of protocol is `backend`. `fit` never rejects; `kind: "fetch"` (an abort through `signal`, `the fit was
 aborted`) leaves the answer unknown.
 
+`fit` judges one memory only: it can refuse a GGUF file that `load` would place in several memories
+(see `memory` under "Options"); `check` agrees with a load that names no `memory`.
+
 A facts admit is never a load guarantee. `check` and `load` judge the file's own header at the commit
 the listing pins, and the facts cannot show what only the file holds: the values of
 `rope_freqs.weight`, a missing `attention.layer_norm_rms_epsilon`, or a tensor whose bytes or element
@@ -305,7 +323,7 @@ count disagree with the table. Facts recorded from an older commit of a repo ans
 
 Only these runs are recorded (the browser-gate record: entries 5, 8 and 9 in the browser, and for the
 quantized aliases entries 10 and 11 off-browser and entries 12 and 14 in the browser, and for the adapter and
-nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.check` entry 20 in the browser, and for the Try page entry 21 in the browser, and for a GGUF file in a repo entry 22, and for `Caldrix.fit` entry 24, and for images entries 59, 60 and 63); nothing else is claimed.
+nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.check` entry 20 in the browser, and for the Try page entry 21 in the browser, and for a GGUF file in a repo entry 22, and for `Caldrix.fit` entry 24, and for images entries 59, 60 and 63, and for weights in several memories entry 71); nothing else is claimed.
 
 - **Model:** SmolLM2-135M-Instruct, one prompt, 8 greedy tokens; the adapter and nf4 repos below add a
   LoRA adapter over it and SmolLM2-360M-Instruct's nf4 repo, on their fixtures' prompt. No other model or prompt.
