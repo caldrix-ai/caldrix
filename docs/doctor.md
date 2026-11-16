@@ -36,10 +36,10 @@ dense snapshots
   none
 
 model support
-  Inferno admits GGUF files of F32, F16, BF16, Q8_0, Q4_K_M and Q6_K, from an Ollama tag or a Hugging Face repo; the quantized ones have run on the metal lane (all three) and the hip lane (Q8_0, Q4_K_M), and the cpu lane has desk readings of all three (not runs); quantized safetensors checkpoints other than bitsandbytes nf4 (densified at fetch) are not supported
+  Inferno admits GGUF files of F32, F16, BF16, Q8_0, Q4_K_M and Q6_K, from an Ollama tag or a Hugging Face repo; the quantized ones have run on the metal lane (all three) and the hip lane (Q8_0, Q4_K_M), the engine's gates have run Q8_0 and Q4_K_M files on the nvidia lane (caldrix itself has run none there), and the cpu lane has desk readings of all three (not runs); quantized safetensors checkpoints other than bitsandbytes nf4 (densified at fetch) are not supported
   Inferno runs Qwen3.5 on the cpu lane (x86-64-v3; a desk reading, not a run), the hip lane (one MI300X) and the metal lane (one Apple M1 Max)
   Inferno runs a quantized Qwen3.5 file on the cpu lane (x86-64-v3; a desk reading, not a run) and the metal lane (one Apple M1 Max)
-  Inferno runs a dense checkpoint on the nvidia lane, on compute capability 6.1 only: by --backend nvidia (the engine's gates, caldrix run and one caldrix serve request held on one GTX 1080 with one small model each of the Llama, Qwen3 and Qwen2 classes), and by auto for a dense Llama, Qwen3 or Qwen2 directory that fits the card's free memory, or for any dense model the lane runs when no other lane is usable, every other model keeping its other lane (auto took the card on one GTX 1080 for each of those models' directories); quantized, Qwen3.5 and vision models are refused there
+  Inferno runs a dense checkpoint on the nvidia lane, on compute capability 6.1 only: by --backend nvidia (the engine's gates, caldrix run and one caldrix serve request held on one GTX 1080 with one small model each of the Llama, Qwen3 and Qwen2 classes), and by auto for a dense Llama, Qwen3 or Qwen2 directory that fits the card's free memory, or for any dense model the lane runs when no other lane is usable, every other model keeping its other lane (auto took the card on one GTX 1080 for each of those models' directories); a quantized GGUF file runs there by --backend nvidia alone (the engine's gates held on Q8_0 and Q4_K_M files on one GTX 1080; caldrix itself has run none on a card), and Qwen3.5 and vision models are refused there
   images on metal: yes (SmolVLM, 64 tokens per 512-px tile)
   images on nvidia: no
   images on hip: yes (SmolVLM, 64 tokens per 512-px tile)
@@ -70,7 +70,7 @@ no kernel was launched; `caldrix run` is what shows a lane works
 - **`model support`** says which GGUF quants `caldrix` admits, from either source, and on which lanes the quantized ones have run, and where Qwen3.5
   (`Qwen3_5ForCausalLM`) runs: `caldrix` runs it on the `cpu`, `hip` and `metal` lanes ([models.md](models.md#aliases)).
   The line after it is the quantized Qwen3.5 file's: the `cpu` lane, a desk reading, and the `metal` lane, where the engine's token gate ran it once on one Apple M1 Max.
-  The next line is the `nvidia` lane's: how the lane is chosen, what ran on an NVIDIA card (Inferno's own tests, and `caldrix run` and `caldrix serve` by `--backend nvidia`, and `auto` choosing the GPU for that model's directory, on one GeForce GTX 1080), and what is refused there.
+  The next line is the `nvidia` lane's: how the lane is chosen, what ran on an NVIDIA card (Inferno's own tests, and `caldrix run` and `caldrix serve` by `--backend nvidia`, and `auto` choosing the GPU for that model's directory, on one GeForce GTX 1080), what runs there by the flag alone, and what is refused there.
   Then one `images on <lane>:` line per lane, in the lanes' order: `yes` where a model that takes images
   runs on that lane (today SmolVLM, `smolvlm-256m`, on `cpu`, `hip` and `metal`: 64 prompt tokens for each 512-pixel tile), else
   `no` ([run.md](run.md#images)). Then one `image generation on <lane>:` line per lane: `yes` on a lane
@@ -97,7 +97,7 @@ no kernel was launched; `caldrix run` is what shows a lane works
 One compute capability, 6.1, is accepted: on such a card the line says `usable`, and `--backend nvidia` runs
 a dense model there. Inferno's kernel and token tests, `caldrix run` and one `caldrix serve` request passed
 on one GeForce GTX 1080 with three small dense models (SmolLM2-135M, Qwen3-0.6B and Qwen2.5-0.5B-Instruct), by
-`--backend nvidia`; no other card or model has been run, and quantized, Qwen3.5 and image models are refused on this lane. For every other card the line says
+`--backend nvidia`; no other card or model has been run by `caldrix`. A quantized GGUF file runs on this lane by `--backend nvidia` only (Inferno's own tests ran Q8_0 and Q4_K_M files on that card; `caldrix` itself has run none there), and Qwen3.5 and image models are refused on this lane. For every other card the line says
 `no`, and `--backend nvidia` is refused with the same reason before anything is downloaded.
 
 **What `--backend auto` does with the GPU.** On Linux, with an NVIDIA GPU of compute capability 6.1 and the
