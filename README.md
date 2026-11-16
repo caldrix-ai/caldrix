@@ -67,7 +67,7 @@ the CPU lane (x86-64-v3) streamed under a 20 GiB budget ([models.md](docs/models
 model's ran at the desk on the CPU lane (x86-64-v3), on one MI300X and on one Apple M1 Max (through the
 engine), and `caldrix` runs Qwen3.5 on the `cpu`, `hip` and `metal` lanes; in the browser the wasm tier takes a quantized Qwen3.5 GGUF file (one Q6_K file of the 0.8B ran, in headless Chromium)
 ([models.md](docs/models.md)).
-Quantized: Ollama Q4_K_M and Q8_0 tags on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); on the `hip` lane, five tags were token-exact in f32 on one MI300X ([models.md](docs/models.md#ollama-tags)); quantized safetensors checkpoints are not supported.
+Quantized: `caldrix` admits GGUF files of Q8_0, Q4_K_M and Q6_K, from an Ollama tag or a Hugging Face repo's file ([models.md](docs/models.md#gguf-files-of-a-hugging-face-repo)); what has run: Ollama Q4_K_M and Q8_0 tags on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); on the `hip` lane, five tags were token-exact in f32 on one MI300X ([models.md](docs/models.md#ollama-tags)); quantized safetensors checkpoints are not supported.
 
 Generation is greedy unless asked: `--temperature`, `--top-k`, `--top-p`, `--min-p`, `--repetition-penalty`
 and `--seed` turn sampling on, and the chat changes them with `/temperature` and its siblings
