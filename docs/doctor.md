@@ -36,7 +36,7 @@ dense snapshots
   none
 
 model support
-  Inferno runs quantized GGUF (Q4_K_M, Q8_0) on the metal and hip lanes and on the cpu lane (a desk reading, not a run); quantized safetensors checkpoints other than bitsandbytes nf4 (densified at fetch) are not supported
+  Inferno admits GGUF files of F32, F16, BF16, Q8_0, Q4_K_M and Q6_K, from an Ollama tag or a Hugging Face repo; the quantized ones have run on the metal lane (all three) and the hip lane (Q8_0, Q4_K_M), and the cpu lane has desk readings of all three (not runs); quantized safetensors checkpoints other than bitsandbytes nf4 (densified at fetch) are not supported
   Inferno runs Qwen3.5 on the cpu lane (x86-64-v3; a desk reading, not a run), the hip lane (one MI300X) and the metal lane (one Apple M1 Max)
   Inferno runs a quantized Qwen3.5 file on the cpu lane (x86-64-v3; a desk reading, not a run) and the metal lane (one Apple M1 Max)
   Inferno runs a dense checkpoint on the nvidia lane, on compute capability 6.1 only: by --backend nvidia (the engine's gates, caldrix run and one caldrix serve request held on one GTX 1080 with one 135M model), and by auto for a dense Llama, Qwen3 or Qwen2 directory that fits the card's free memory, or for any dense model the lane runs when no other lane is usable, every other model keeping its other lane (auto took the card on one GTX 1080 for that model's directory); quantized, Qwen3.5 and vision models are refused there
@@ -67,7 +67,7 @@ no kernel was launched; `caldrix run` is what shows a lane works
   build supports, not a measurement; today `metal`, `hip` and `cpu` say `yes` and `nvidia` says `no`.
 - **The `index`, `ollama cache` and `dense snapshots` blocks** say what `caldrix` found in its caches on
   disk; `doctor` reads them and makes no request.
-- **`model support`** says which model formats Inferno runs on which lanes (quantized GGUF) and where Qwen3.5
+- **`model support`** says which GGUF quants `caldrix` admits, from either source, and on which lanes the quantized ones have run, and where Qwen3.5
   (`Qwen3_5ForCausalLM`) runs: `caldrix` runs it on the `cpu`, `hip` and `metal` lanes ([models.md](models.md#aliases)).
   The line after it is the quantized Qwen3.5 file's: the `cpu` lane, a desk reading, and the `metal` lane, where the engine's token gate ran it once on one Apple M1 Max.
   The next line is the `nvidia` lane's: how the lane is chosen, what ran on an NVIDIA card (Inferno's own tests, and `caldrix run` and `caldrix serve` by `--backend nvidia`, and `auto` choosing the GPU for that model's directory, on one GeForce GTX 1080), and what is refused there.

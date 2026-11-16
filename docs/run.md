@@ -29,8 +29,11 @@ The model comes first; flags follow it.
    [Generating an image](#generating-an-image)), each a Hugging Face repo pinned to a revision
    ([models.md](models.md)).
 3. **A Hugging Face repo id**, `owner/name` or `owner/name@revision`. Without `@revision` it is `main`.
+4. **One GGUF file of a Hugging Face repo**, `owner/name[@revision]:<quant>` (`unsloth/Qwen3.5-0.8B-GGUF:Q6_K`)
+   or `owner/name[@revision]:<file>.gguf` ([models.md](models.md#gguf-files-of-a-hugging-face-repo)).
+5. **An Ollama tag**, `ollama:<name>[:<tag>]` ([models.md](models.md#ollama-tags)).
 
-An alias or a repo id is downloaded into the Hugging Face cache the first time and read from there after.
+An alias, a repo id or a repo's GGUF file is downloaded into the Hugging Face cache the first time and read from there after.
 Anything else is refused before any download.
 
 ## One prompt

@@ -48,7 +48,7 @@ With the defaults, `helm install` creates:
 
 | key | default | meaning |
 |---|---|---|
-| `model.name` | `smollm2-instruct` | the model: an alias, a hub id `owner/name[@revision]`, or `ollama:<tag>`, as in [Models](models.md) |
+| `model.name` | `smollm2-instruct` | the model: an alias, a hub id `owner/name[@revision]`, one GGUF file of a hub repo `owner/name[@revision]:<quant>`, or `ollama:<tag>`, as in [Models](models.md) |
 | `model.context` | `""` | the context length, when set |
 | `model.extraArgs` | `[]` | further `caldrix serve` arguments, appended verbatim |
 | `persistence.size` | `20Gi` | the model cache's PersistentVolumeClaim |

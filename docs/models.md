@@ -120,7 +120,7 @@ library. `caldrix` downloads its GGUF from the Ollama registry.
 caldrix run ollama:smollm2:135m-instruct-q8_0 -p "What is the capital of France?" --backend metal
 ```
 
-A Q4_K_M or Q8_0 tag is read and sized before any download. It runs at an f32 plan, the default when
+A Q4_K_M, Q8_0 or Q6_K tag is read and sized before any download. It runs at an f32 plan, the default when
 `--dtype` is not given; an explicit `--dtype bf16` and `--weight-budget` are refused by name.
 
 - `metal`: on one Apple M1 Max, `smollm2:135m-instruct-q4_K_M`, `smollm2:135m-instruct-q8_0`,
@@ -136,6 +136,31 @@ A Q4_K_M or Q8_0 tag is read and sized before any download. It runs at an f32 pl
   were token-exact in f32 by their token gates (eight greedy tokens of one prompt each).
 
 Quantized safetensors checkpoints stay refused ([What the import refuses](#what-the-import-refuses)).
+
+## GGUF files of a Hugging Face repo
+
+One GGUF file of a Hugging Face repo is named `owner/name[@revision]:<quant>`, the quant as the file's name
+ends (`Q6_K`, any case), or `owner/name[@revision]:<file>.gguf`, the file's exact name. Without
+`@revision` it is `main`.
+
+```sh
+caldrix run unsloth/Qwen3.5-0.8B-GGUF:Q6_K -p "Counting to ten: one, two, three," --backend cpu
+```
+
+`caldrix` lists the repo at the commit the revision names and takes the one top-level `.gguf` file whose
+name carries that quant. When two files carry it (`model-Q4_K_M.gguf` and `model-UD-Q4_K_M.gguf`), or none
+does, the run is refused with every file it could be; name the file then. One part of a split file
+(`-00001-of-00003.gguf`, or a header that says `split.count` above 1) and a multimodal projector
+(`mmproj-*.gguf`) are refused by name. There is no default quant.
+
+`caldrix` admits GGUF files of F32, F16, BF16, Q8_0, Q4_K_M and Q6_K, from a Hugging Face repo or an
+Ollama tag alike; any other quant is refused by name. Before any byte past the file's header it checks the
+quant, the header (architecture and every tensor's type), the lane and the fit, as for an Ollama tag. The
+file is downloaded into the Hugging Face cache (`blobs/<sha256>`, linked from `snapshots/<commit>/<file>`),
+where other Hugging Face tools find it too, and is used only when its SHA-256 equals the one the Hub
+publishes for it; an interrupted download resumes. Quantized files run at an f32 plan, as an Ollama tag's
+do. What has run on which lane is in [Ollama tags](#ollama-tags) and `caldrix doctor`; a file is admitted
+by its header, and that a repo's file is admitted does not mean it has run.
 
 ## caldrix models
 
@@ -200,8 +225,10 @@ From the top level of the repo, at the resolved commit:
   `caldrix: reads model.safetensors (as transformers loads it); not read: …`.
 
 A repo without `config.json`, a supported tokenizer (`tokenizer.json`, a SentencePiece `tokenizer.model`, or both `vocab.json` and `merges.txt`) or any
-`*.safetensors` file is refused; GGUF, `.bin` and other
-weight formats are not supported. Before downloading, `caldrix` prints the number of files and their total
+`*.safetensors` file is refused; `.bin` and other
+weight formats are not supported. A repo that holds GGUF files and no `*.safetensors` is refused with the
+way to choose one, `owner/name:<quant>`, and every file it could be
+([GGUF files of a Hugging Face repo](#gguf-files-of-a-hugging-face-repo)). Before downloading, `caldrix` prints the number of files and their total
 size, then each file. Files already in the cache are kept, so an interrupted download resumes at the
 first missing file.
 
