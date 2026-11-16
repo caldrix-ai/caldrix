@@ -122,7 +122,7 @@ type Kind = "probe" | "fit" | "architecture" | "fetch" | "digest" | "validate" |
 
 ## Images
 
-This section describes caldrix.js 0.18.0, which is not yet published: the published version takes
+This section describes caldrix.js 0.18.1, which is not yet published: the published version takes
 images on the wasm tier only.
 
 A quantized Qwen3.5 GGUF file loads by its Hub repo id and file name on the WebAssembly tier only
