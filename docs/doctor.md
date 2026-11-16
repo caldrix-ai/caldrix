@@ -39,7 +39,7 @@ model support
   Inferno admits GGUF files of F32, F16, BF16, Q8_0, Q4_K_M and Q6_K, from an Ollama tag or a Hugging Face repo; the quantized ones have run on the metal lane (all three) and the hip lane (Q8_0, Q4_K_M), and the cpu lane has desk readings of all three (not runs); quantized safetensors checkpoints other than bitsandbytes nf4 (densified at fetch) are not supported
   Inferno runs Qwen3.5 on the cpu lane (x86-64-v3; a desk reading, not a run), the hip lane (one MI300X) and the metal lane (one Apple M1 Max)
   Inferno runs a quantized Qwen3.5 file on the cpu lane (x86-64-v3; a desk reading, not a run) and the metal lane (one Apple M1 Max)
-  Inferno runs a dense checkpoint on the nvidia lane, on compute capability 6.1 only: by --backend nvidia (the engine's gates, caldrix run and one caldrix serve request held on one GTX 1080 with one 135M model), and by auto for a dense Llama, Qwen3 or Qwen2 directory that fits the card's free memory, or for any dense model the lane runs when no other lane is usable, every other model keeping its other lane (auto took the card on one GTX 1080 for that model's directory); quantized, Qwen3.5 and vision models are refused there
+  Inferno runs a dense checkpoint on the nvidia lane, on compute capability 6.1 only: by --backend nvidia (the engine's gates, caldrix run and one caldrix serve request held on one GTX 1080 with one small model each of the Llama, Qwen3 and Qwen2 classes), and by auto for a dense Llama, Qwen3 or Qwen2 directory that fits the card's free memory, or for any dense model the lane runs when no other lane is usable, every other model keeping its other lane (auto took the card on one GTX 1080 for each of those models' directories); quantized, Qwen3.5 and vision models are refused there
   images on metal: yes (SmolVLM, 64 tokens per 512-px tile)
   images on nvidia: no
   images on hip: yes (SmolVLM, 64 tokens per 512-px tile)
@@ -96,16 +96,16 @@ no kernel was launched; `caldrix run` is what shows a lane works
 
 One compute capability, 6.1, is accepted: on such a card the line says `usable`, and `--backend nvidia` runs
 a dense model there. Inferno's kernel and token tests, `caldrix run` and one `caldrix serve` request passed
-on one GeForce GTX 1080 with one small dense model, by `--backend nvidia`; no other card or model has been
-run, and quantized, Qwen3.5 and image models are refused on this lane. For every other card the line says
+on one GeForce GTX 1080 with three small dense models (SmolLM2-135M, Qwen3-0.6B and Qwen2.5-0.5B-Instruct), by
+`--backend nvidia`; no other card or model has been run, and quantized, Qwen3.5 and image models are refused on this lane. For every other card the line says
 `no`, and `--backend nvidia` is refused with the same reason before anything is downloaded.
 
 **What `--backend auto` does with the GPU.** On Linux, with an NVIDIA GPU of compute capability 6.1 and the
 NVIDIA driver, `caldrix run` and `caldrix serve` under `auto` use the GPU in two cases:
 
 - **A dense Llama, Qwen3 or Qwen2 model in a local directory that fits the GPU's free memory.** These are
-  the families whose token tests have passed on an NVIDIA GPU (SmolLM2-135M, Qwen3-0.6B and
-  Qwen2.5-0.5B-Instruct; `caldrix run` and `caldrix serve` themselves have run only SmolLM2 there), and the
+  the families whose token tests have passed on an NVIDIA GPU, and that `caldrix run` and `caldrix serve`
+  have run there (SmolLM2-135M, Qwen3-0.6B and Qwen2.5-0.5B-Instruct, one GeForce GTX 1080), and the
   directory's `config.json` says what it is before anything is loaded. `auto` uses the GPU for it ahead of
   the `hip` and `cpu` lanes.
 - **When no other lane is usable,** any dense model the lane runs that fits the GPU's free memory: a model
