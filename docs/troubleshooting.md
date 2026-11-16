@@ -34,7 +34,7 @@ Every refusal caldrix prints, with its cause and its fix. Each quoted message is
 
 ## `caldrix doctor` lanes
 
-`caldrix doctor` prints one line per lane, and `--backend auto` takes the first lane that says `usable`; it takes the `nvidia` lane only for a dense Llama-family model in a local directory that fits the GPU's free memory, or as the last resort when no other lane is usable ([doctor.md](doctor.md#nvidia)). A line saying `no` carries one of these reasons. Nothing in `doctor` launches a kernel.
+`caldrix doctor` prints one line per lane, and `--backend auto` takes the first lane that says `usable`; it takes the `nvidia` lane only for a dense Llama, Qwen3 or Qwen2 model in a local directory that fits the GPU's free memory, or as the last resort when no other lane is usable ([doctor.md](doctor.md#nvidia)). A line saying `no` carries one of these reasons. Nothing in `doctor` launches a kernel.
 
 ### No usable lane
 
@@ -209,7 +209,7 @@ browser names the repo first and refuses before the first weight file.
 
 **Cause.** `--port`, `--host`, `--admin` or `--admin-port` was given to `run`; or `--model-dir`; or `--backend host`.
 
-**Fix.** Use `caldrix serve` for HTTP flags. Give the model as the first argument. Choose `auto`, `hip`, `metal`, `nvidia` or `cpu` for `--backend`; `nvidia` refuses every card but one of compute capability 6.1, and `auto` uses such a card only for a dense Llama-family model in a local directory, or when no other lane is usable ([run.md](run.md#refused-flags), [doctor.md](doctor.md#nvidia)).
+**Fix.** Use `caldrix serve` for HTTP flags. Give the model as the first argument. Choose `auto`, `hip`, `metal`, `nvidia` or `cpu` for `--backend`; `nvidia` refuses every card but one of compute capability 6.1, and `auto` uses such a card only for a dense Llama, Qwen3 or Qwen2 model in a local directory, or when no other lane is usable ([run.md](run.md#refused-flags), [doctor.md](doctor.md#nvidia)).
 
 ### A bad value
 

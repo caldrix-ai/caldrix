@@ -39,7 +39,7 @@ model support
   Inferno runs quantized GGUF (Q4_K_M, Q8_0) on the metal and hip lanes and on the cpu lane (a desk reading, not a run); quantized safetensors checkpoints other than bitsandbytes nf4 (densified at fetch) are not supported
   Inferno runs Qwen3.5 on the cpu lane (x86-64-v3; a desk reading, not a run), the hip lane (one MI300X) and the metal lane (one Apple M1 Max)
   Inferno runs a quantized Qwen3.5 file on the cpu lane (x86-64-v3; a desk reading, not a run) and the metal lane (one Apple M1 Max)
-  Inferno runs a dense checkpoint on the nvidia lane, on compute capability 6.1 only: by --backend nvidia (the engine's gates, caldrix run and one caldrix serve request held on one GTX 1080 with one 135M model), and by auto for a dense Llama-family directory that fits the card's free memory, or for any dense model the lane runs when no other lane is usable, every other model keeping its other lane (auto took the card on one GTX 1080 for that model's directory); quantized, Qwen3.5 and vision models are refused there
+  Inferno runs a dense checkpoint on the nvidia lane, on compute capability 6.1 only: by --backend nvidia (the engine's gates, caldrix run and one caldrix serve request held on one GTX 1080 with one 135M model), and by auto for a dense Llama, Qwen3 or Qwen2 directory that fits the card's free memory, or for any dense model the lane runs when no other lane is usable, every other model keeping its other lane (auto took the card on one GTX 1080 for that model's directory); quantized, Qwen3.5 and vision models are refused there
   images on metal: yes (SmolVLM, 64 tokens per 512-px tile)
   images on nvidia: no
   images on hip: yes (SmolVLM, 64 tokens per 512-px tile)
@@ -59,7 +59,7 @@ no kernel was launched; `caldrix run` is what shows a lane works
 - **`lanes`** has one line per lane: `metal`, `nvidia`, `hip`, `cpu`. Each says `usable` with what was
   found, or `no` with the reason. `caldrix run` and `caldrix serve` with `--backend auto` (the default) take
   the first usable lane of `metal`, `hip` and `cpu`, in that order. Ahead of `hip` and `cpu` they take a
-  usable `nvidia` lane only for a dense Llama-family model in a local directory that fits the GPU's free
+  usable `nvidia` lane only for a dense Llama, Qwen3 or Qwen2 model in a local directory that fits the GPU's free
   memory, and after them only as the last resort ([`nvidia`](#nvidia)); a usable `nvidia` line alone does
   not mean `auto` takes it.
 - **`speculation=yes` or `speculation=no`** ends each lane line: whether the lane can check a draft model's
@@ -103,20 +103,20 @@ run, and quantized, Qwen3.5 and image models are refused on this lane. For every
 **What `--backend auto` does with the GPU.** On Linux, with an NVIDIA GPU of compute capability 6.1 and the
 NVIDIA driver, `caldrix run` and `caldrix serve` under `auto` use the GPU in two cases:
 
-- **A dense Llama-family model in a local directory that fits the GPU's free memory.** This is the one
-  family whose token tests have passed on an NVIDIA GPU (SmolLM2 is of it), and the directory's
-  `config.json` says what it is before anything is loaded. `auto` uses the GPU for it ahead of the `hip` and
-  `cpu` lanes.
+- **A dense Llama, Qwen3 or Qwen2 model in a local directory that fits the GPU's free memory.** These are
+  the families whose token tests have passed on an NVIDIA GPU (SmolLM2-135M, Qwen3-0.6B and
+  Qwen2.5-0.5B-Instruct; `caldrix run` and `caldrix serve` themselves have run only SmolLM2 there), and the
+  directory's `config.json` says what it is before anything is loaded. `auto` uses the GPU for it ahead of
+  the `hip` and `cpu` lanes.
 - **When no other lane is usable,** any dense model the lane runs that fits the GPU's free memory: a model
   directory, or a Hugging Face repository (a repo id, or an alias of one) of the Qwen3, Qwen2 or Mistral
   class whose class the model index or the Hub names before the download. Without the GPU such a command
   would be refused with `no usable lane`.
 
 Everything else keeps the lane it has on a machine with no NVIDIA GPU. While another lane is usable that
-is: every model named by Hugging Face repository, alias or Ollama reference, and a directory of the Qwen3,
-Qwen2 or Mistral class (`auto` does not prefer the GPU for those yet: Inferno's token test has run on an
-NVIDIA GPU for one Qwen3 and one Qwen2 model, `caldrix` itself has run neither there, and no Mistral model
-has run there). In both cases it is also:
+is: every model named by Hugging Face repository or alias (no model fetched from the Hub has run on an
+NVIDIA GPU, so `auto` prefers the GPU for a local directory only), and a directory of the Mistral class (no
+Mistral model has run on an NVIDIA GPU). In both cases it is also:
 quantized, Qwen3.5 and image models; a GGUF file; Ollama references; `caldrix pool` members;
 mixture-of-experts models; a model with an adapter; a model that uses the mish activation; Hugging Face
 repositories of the Llama class, because a repository does not state its activation before the download; a
@@ -142,7 +142,7 @@ What the line names is what `doctor` read:
 - When the driver loads and sees no card: `the NVIDIA driver reports no device`. When a driver call fails:
   `the NVIDIA driver failed`, with the failed call's status and name after `detail:`.
 - When it sees a card of compute capability 6.1, the line says `usable` and names the card and its
-  capability, then `chosen by --backend nvidia, and by auto for a dense Llama-family directory that fits its
+  capability, then `chosen by --backend nvidia, and by auto for a dense Llama, Qwen3 or Qwen2 directory that fits its
   free memory or when no other lane is usable`, the driver version and the card's total memory.
 - When it sees any other card, the line names it, its compute capability and why that capability is not
   admitted (no card of that capability has a recorded run), then the driver version and the card's memory.
