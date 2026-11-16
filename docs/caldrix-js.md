@@ -224,7 +224,12 @@ interface LoadOptions {
   under `backend: "auto"` the WebGPU tier's refusal moves the load to the wasm tier, as its other refusals do (this ran
   on a software adapter, not a GPU). A split load's `doctor().line` ends with `, memory: split, ` and the number of weight memories; a one-memory
   load's line is unchanged. Placing weights in several memories has run in headless Chromium on a small test
-  file only (the browser-gate record, entry 71); no real model and no file past 4 GiB has been loaded this way.
+  file (the browser-gate record, entry 71) and on one real 8B model file past 4 GiB, served by the loopback hub
+  under a test repo id and loaded with no `memory` option into 2 weight memories (entry 72). In the browser test
+  session that ran it, the file was not kept in the browser's cache and a second load downloaded it again; why is
+  not established, and whether a browser that keeps its storage caches it has not been tried. Not run past 4 GiB:
+  any other browser, any device, the WebGPU tier, the default context, a real Hub download, a file needing more
+  than 2 weight memories, a weight memory of the full 4 GiB, a persistent browser profile.
 - **`weightMemoryBytes`**: for diagnosis, the bytes each weight memory of a `memory: "split"` load may hold
   (a multiple of 64 from 128 bytes to 4 GiB; the default is 4 GiB). Refused without `memory: "split"`.
 - **`file`**: the GGUF file to load from a repo id, by its name at the repo's top level (`"model-Q4_K_M.gguf"`). A
@@ -323,7 +328,7 @@ count disagree with the table. Facts recorded from an older commit of a repo ans
 
 Only these runs are recorded (the browser-gate record: entries 5, 8 and 9 in the browser, and for the
 quantized aliases entries 10 and 11 off-browser and entries 12 and 14 in the browser, and for the adapter and
-nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.check` entry 20 in the browser, and for the Try page entry 21 in the browser, and for a GGUF file in a repo entry 22, and for `Caldrix.fit` entry 24, and for images entries 59, 60 and 63, and for weights in several memories entry 71); nothing else is claimed.
+nf4 repos entry 16 off-browser and entry 17 in the browser, and for `Caldrix.check` entry 20 in the browser, and for the Try page entry 21 in the browser, and for a GGUF file in a repo entry 22, and for `Caldrix.fit` entry 24, and for images entries 59, 60 and 63, and for weights in several memories entries 71 and 72); nothing else is claimed.
 
 - **Model:** SmolLM2-135M-Instruct, one prompt, 8 greedy tokens; the adapter and nf4 repos below add a
   LoRA adapter over it and SmolLM2-360M-Instruct's nf4 repo, on their fixtures' prompt. No other model or prompt.
