@@ -122,9 +122,6 @@ type Kind = "probe" | "fit" | "architecture" | "fetch" | "digest" | "validate" |
 
 ## Images
 
-This section describes caldrix.js 0.18.1, which is not yet published: the published version takes
-images on the wasm tier only.
-
 A quantized Qwen3.5 GGUF file loads by its Hub repo id and file name on the WebAssembly tier only
 (`Caldrix.load("unsloth/Qwen3.5-0.8B-GGUF", { file: "Qwen3.5-0.8B-Q6_K.gguf" })`; there is no alias for it).
 The WebGPU tier has none of this model's kernels: `backend: "auto"` uses the WebAssembly tier and
@@ -403,7 +400,7 @@ package's own assets when the bundle's copy fails.
 
 ## Bundlers
 
-What ran: Vite 8.3.5 and Next.js 16.4.3 (Turbopack and webpack) with `output: "export"`, a minimal app
+What ran: Vite 8.3.5 and Next.js 16.4.6 (Turbopack and webpack) with `output: "export"`, a minimal app
 each, on the wasm tier with a tiny Llama fixture served from a loopback Hub, in headless Chromium. The
 package's own bundler test installs the packed package into those apps and runs in CI. Those apps needed
 no bundler configuration. Nothing else is claimed: other versions, other bundlers and the WebGPU tier

@@ -5,7 +5,7 @@ or a repo id is downloaded into the standard Hugging Face cache and read from th
 accepts dense Llama, Mistral, Qwen2 and Qwen3 checkpoints, the Qwen3 mixture-of-experts architecture
 (`Qwen3MoeForCausalLM`) and Qwen3.5 (`Qwen3_5ForCausalLM`, and `Qwen3_5ForConditionalGeneration` as text
 only) in safetensors, bf16, f32 or f16, and SmolVLM's vision-language architecture
-(`Idefics3ForConditionalGeneration`), which runs on the `cpu`, `hip` and `metal` lanes and in the browser on both tiers from caldrix.js 0.16.0, not yet published (the published version on the wasm tier only; [Aliases](#aliases)); f16 weights are computed in bf16 by default, or exactly with
+(`Idefics3ForConditionalGeneration`), which runs on the `cpu`, `hip` and `metal` lanes and in the browser on both tiers from caldrix.js 0.16.0 ([Aliases](#aliases)); f16 weights are computed in bf16 by default, or exactly with
 `--dtype f32`; quantized safetensors checkpoints are refused. Qwen3.5 runs on the `cpu`,
 `hip` and `metal` lanes ([Aliases](#aliases)); `inferno serve` also serves it on `--backend host`, its off-hardware test
 stand-in, which makes no hardware claim. Quantized Ollama tags (Q4_K_M and
@@ -35,7 +35,7 @@ are refused for it. A quantized Qwen3.5 GGUF file runs on the `cpu` lane, a desk
 `smolvlm-256m` (SmolVLM-256M-Instruct, `Idefics3ForConditionalGeneration`) is a vision-language model: it takes
 images as well as text, in `caldrix run` with `-i` and `/image` ([run.md](run.md#images)) and in `caldrix serve`
 as image parts ([api.md](api.md)). It runs on the CPU, HIP and Metal lanes, and in the browser on both
-tiers through caldrix.js 0.16.0, not yet published; the published version takes images on the wasm tier only ([caldrix-js.md](caldrix-js.md#images); on the wasm tier it has run in Playwright's
+tiers through caldrix.js 0.16.0 ([caldrix-js.md](caldrix-js.md#images); on the wasm tier it has run in Playwright's
 headless Chromium on Linux, on the WebGPU tier in Playwright's Chromium on the operator's Apple M1 Max on its
 own adapter (`apple`, `metal-3`), each on a test build that admitted it ahead of the release, as [What has run, and
 where](caldrix-js.md#what-has-run-and-where) records). `caldrix doctor` prints which lanes take images. It is verified at the desk on the
