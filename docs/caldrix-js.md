@@ -224,7 +224,7 @@ interface LoadOptions {
   file (the browser-gate record, entry 71) and on one real 8B model file past 4 GiB, served by the loopback hub
   under a test repo id and loaded with no `memory` option into 2 weight memories (entry 72). In the browser test
   session that ran it, the file was not kept in the browser's cache and a second load downloaded it again.
-  caldrix.js 0.19.0 keeps a file past 64 MiB in the cache as parts of that size and
+  The package keeps a file past 64 MiB in the cache as parts of that size and
   an index (a browser may refuse one entry past a size it does not announce), and in the same session the file was
   kept and a second load read it from the cache (entry 73). The same file was kept and read back the same way in
   that browser over a profile directory and in Firefox 155, one test run each (entry 74). Not run past 4 GiB:
