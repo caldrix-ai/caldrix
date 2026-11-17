@@ -371,7 +371,7 @@ The prompts run one at a time, in order, each through the server's request queue
 above: other requests can run between them, and a full queue answers `429` for the whole request. A `500`
 also means the reading gave a probability that is not a finite number.
 
-`decider-0.8b` is a Qwen3.5 model, which this server runs on the CPU lane, on the HIP lane (one MI300X, single-stream), on the Metal lane (one Apple M1 Max) and on `--backend host` (its off-hardware test stand-in, which makes no hardware claim); it also admits one on the NVIDIA lane, where the engine's token gates ran on one GeForce GTX 1080 and no server has served a Qwen3.5 model ([models.md](models.md)),
+`decider-0.8b` is a Qwen3.5 model, which this server runs on the CPU lane, on the HIP lane (one MI300X, single-stream), on the Metal lane (one Apple M1 Max) and on `--backend host` (its off-hardware test stand-in, which makes no hardware claim); it also runs one on the NVIDIA lane, where the engine's token gates ran on one GeForce GTX 1080 and `caldrix serve` answered one request from Qwen3.5-0.8B-Base (`inferno serve`'s own binary has served none there) ([models.md](models.md)),
 with `--max-batch 1` as above.
 
 ## Not implemented
