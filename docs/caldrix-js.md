@@ -227,9 +227,10 @@ interface LoadOptions {
   The package keeps a file past 64 MiB in the cache as parts of that size and
   an index (a browser may refuse one entry past a size it does not announce), and in the same session the file was
   kept and a second load read it from the cache (entry 73). The same file was kept and read back the same way in
-  that browser over a profile directory and in Firefox 155, one test run each (entry 74). Not run past 4 GiB:
-  any browser but those two, any device, the WebGPU tier, the default context, a real Hub download, a file needing
-  more than 2 weight memories, a weight memory of the full 4 GiB, a second visit after the browser was closed.
+  that browser over a profile directory and in Firefox 155, one test run each (entry 74), and in both a second
+  visit, the browser closed and opened again over the same profile, read it from the cache (entry 76). Not run
+  past 4 GiB: any browser but those two, any device, the WebGPU tier, the default context, a real Hub download, a
+  file needing more than 2 weight memories, a weight memory of the full 4 GiB.
 - **`weightMemoryBytes`**: for diagnosis, the bytes each weight memory of a `memory: "split"` load may hold
   (a multiple of 64 from 128 bytes to 4 GiB; the default is 4 GiB). Refused without `memory: "split"`.
 - **`file`**: the GGUF file to load from a repo id, by its name at the repo's top level (`"model-Q4_K_M.gguf"`). A
