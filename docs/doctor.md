@@ -22,7 +22,7 @@ caldrix 0.2.0 (unknown commit, x86_64-linux)
 
 lanes
   metal  no      the Metal lane exists on macOS only; speculation=yes
-  nvidia no      no NVIDIA driver library; detail: …; speculation=no
+  nvidia no      no NVIDIA driver library; detail: …; speculation=yes
   hip    no      the HIP runtime did not load: dlopen libamdhip64.so: libamdhip64.so: cannot open shared object file: No such file or directory; speculation=yes
   cpu    usable  x86-64-v3 (12 physical cores, cgroup quota 8) features=sse4_2,popcnt,avx,avx2,fma,f16c,bmi1,bmi2,movbe,lzcnt; ld.lld at …; libm glibc 2.42; …; speculation=yes
 
@@ -64,7 +64,8 @@ no kernel was launched; `caldrix run` is what shows a lane works
   not mean `auto` takes it.
 - **`speculation=yes` or `speculation=no`** ends each lane line: whether the lane can check a draft model's
   guesses, so `--draft-model` can speculate there ([run.md](run.md#speculative-decoding)). It reports what the
-  build supports, not a measurement; today `metal`, `hip` and `cpu` say `yes` and `nvidia` says `no`.
+  build supports, not a measurement; today every lane says `yes`. On `nvidia` the
+  engine's check held on one rented card; the `caldrix` binary has not yet run a draft on one.
 - **The `index`, `ollama cache` and `dense snapshots` blocks** say what `caldrix` found in its caches on
   disk; `doctor` reads them and makes no request.
 - **`model support`** says which GGUF quants `caldrix` admits, from either source, and on which lanes the quantized ones have run, and where Qwen3.5

@@ -218,8 +218,8 @@ guesses, and a greedy reply is the same tokens plain decoding gives. One excepti
 lane at bf16 the check runs a different order of arithmetic from plain decoding, and where plain decoding's own
 top two choices lie within rounding of each other the reply can take the other one from that point on. It works
 on a lane that can check a draft: `caldrix doctor` prints `speculation=yes` or `speculation=no` on each lane line
-([doctor.md](doctor.md)), and today `cpu`, `hip` and `metal` say `yes`. On another lane the flag is not used,
-and stderr says why.
+([doctor.md](doctor.md)), and today every lane says `yes` (on `nvidia` by the explicit `--backend nvidia`: `auto` does not
+put a model with a named draft on an NVIDIA card).
 
 - Before any download, a draft the model index describes must pass the architecture gate and, when the index
   also holds the main model, fit beside it: in memory with both models resident, and on disk, where the draft's
