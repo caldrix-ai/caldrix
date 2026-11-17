@@ -261,10 +261,10 @@ load only until the tier is settled: for a repo id the Hub listing (for a LoRA a
 `adapter_config.json` and its base's Hub listing too), then `config.json` and the safetensors index
 (for a GGUF file, an alias's or one named by `file`, the file's header range instead, and
 `rope_freqs.weight`'s extent, at most 512 bytes, as a second range when it lies past the header), the same precheck as `load`, and on the WebGPU
-tier the device open, after which the device is destroyed and the worker ends. It never fetches a
+tier the device open, after which the device is destroyed. It never fetches a
 tokenizer file or a weight, sends no `onProgress` events, and is never `offline`.
 
-In caldrix.js 0.18.2, which is not yet published, the worker does not always end there: a `check` or `fit` that answers `ok` leaves its worker open for five seconds, and the next `check` or
+A `check` or `fit` that answers `ok` leaves its worker open for five seconds, and the next `check` or
 `fit` with the same `assets` takes it: a list of models checked one after another starts one worker
 and compiles the `.wasm` once. A refusal, an abort and a `load` each end that worker, as does a second
 check answering beside one already left open.
