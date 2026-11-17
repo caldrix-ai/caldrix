@@ -64,8 +64,7 @@ no kernel was launched; `caldrix run` is what shows a lane works
   not mean `auto` takes it.
 - **`speculation=yes` or `speculation=no`** ends each lane line: whether the lane can check a draft model's
   guesses, so `--draft-model` can speculate there ([run.md](run.md#speculative-decoding)). It reports what the
-  build supports, not a measurement; today every lane says `yes`. On `nvidia` the
-  engine's check held on one rented card; the `caldrix` binary has not yet run a draft on one.
+  build supports, not a measurement; today every lane says `yes`.
 - **The `index`, `ollama cache` and `dense snapshots` blocks** say what `caldrix` found in its caches on
   disk; `doctor` reads them and makes no request.
 - **`model support`** says which GGUF quants `caldrix` admits, from either source, and on which lanes the quantized ones have run, and where Qwen3.5
