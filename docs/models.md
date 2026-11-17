@@ -34,7 +34,7 @@ are refused for it. A quantized Qwen3.5 GGUF file runs on the `cpu` lane, a desk
 
 `smolvlm-256m` (SmolVLM-256M-Instruct, `Idefics3ForConditionalGeneration`) is a vision-language model: it takes
 images as well as text, in `caldrix run` with `-i` and `/image` ([run.md](run.md#images)) and in `caldrix serve`
-as image parts ([api.md](api.md)). It runs on the CPU, HIP and Metal lanes (and on the NVIDIA lane by `--backend nvidia` only, where Inferno's own token test ran it on one GeForce GTX 1080 and `caldrix` itself has run none), and in the browser on both
+as image parts ([api.md](api.md)). It runs on the CPU, HIP and Metal lanes (and on the NVIDIA lane by `--backend nvidia` only, where Inferno's own token test, `caldrix serve` and `caldrix run -i` ran it on one GeForce GTX 1080), and in the browser on both
 tiers through caldrix.js 0.16.0 ([caldrix-js.md](caldrix-js.md#images); on the wasm tier it has run in Playwright's
 headless Chromium on Linux, on the WebGPU tier in Playwright's Chromium on the operator's Apple M1 Max on its
 own adapter (`apple`, `metal-3`), each on a test build that admitted it ahead of the release, as [What has run, and
