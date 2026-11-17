@@ -264,6 +264,11 @@ load only until the tier is settled: for a repo id the Hub listing (for a LoRA a
 tier the device open, after which the device is destroyed and the worker ends. It never fetches a
 tokenizer file or a weight, sends no `onProgress` events, and is never `offline`.
 
+In caldrix.js 0.18.2, which is not yet published, the worker does not always end there: a `check` or `fit` that answers `ok` leaves its worker open for five seconds, and the next `check` or
+`fit` with the same `assets` takes it: a list of models checked one after another starts one worker
+and compiles the `.wasm` once. A refusal, an abort and a `load` each end that worker, as does a second
+check answering beside one already left open.
+
 Under `backend: "auto"` the answer is the tier the load would end on: a WebGPU refusal of the kinds
 `load` falls back on (a limit, a larger explicit context, a device that fails to open) answers
 `{ ok: true, backend: "wasm" }`, and a bf16 request answers wasm as `load` places it. An explicit
