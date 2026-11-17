@@ -223,8 +223,11 @@ interface LoadOptions {
   load's line is unchanged. Placing weights in several memories has run in headless Chromium on a small test
   file (the browser-gate record, entry 71) and on one real 8B model file past 4 GiB, served by the loopback hub
   under a test repo id and loaded with no `memory` option into 2 weight memories (entry 72). In the browser test
-  session that ran it, the file was not kept in the browser's cache and a second load downloaded it again; why is
-  not established, and whether a browser that keeps its storage caches it has not been tried. Not run past 4 GiB:
+  session that ran it, the file was not kept in the browser's cache and a second load downloaded it again.
+  caldrix.js 0.19.0, which is not yet published, keeps a file past 64 MiB in the cache as parts of that size and
+  an index (a browser may refuse one entry past a size it does not announce), and in the same session the file was
+  kept and a second load read it from the cache (entry 73). A browser that keeps its storage has not been tried
+  through the package. Not run past 4 GiB:
   any other browser, any device, the WebGPU tier, the default context, a real Hub download, a file needing more
   than 2 weight memories, a weight memory of the full 4 GiB, a persistent browser profile.
 - **`weightMemoryBytes`**: for diagnosis, the bytes each weight memory of a `memory: "split"` load may hold
