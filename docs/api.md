@@ -193,7 +193,8 @@ curl http://localhost:8425/v1/models
 ## `GET /healthz`, `GET /metrics`, `GET /debug/requests`
 
 `/healthz` answers `ok` (so does `/health`). `/metrics` is Prometheus text. `/debug/requests` is the
-telemetry of the most recent requests, as JSON; it carries token counts, never text.
+telemetry of the most recent requests, as JSON; it carries token counts, never text. A request is
+in it by the time its response ends: its record is written before the last chunk of the reply.
 
 ## Sampling
 
