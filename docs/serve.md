@@ -74,7 +74,8 @@ download starts.
 | `--prefill-grid off\|on` | AMD lane only: run each prompt's prefill as one persistent train beside the decode step; `on` needs `--prefill-attention tiles`, `--prefill-gemm inferno`, `--max-batch 8`, bf16, resident weights and a dense Llama model, and is refused otherwise, naming the other flag | `off` |
 | `--threads N` | `cpu` only: the size of the thread pool | the physical cores, capped by a cgroup CPU quota |
 | `--cpu-isa ROW` | `cpu` only: the instruction-set row to compile for (`x86-64-v2`, `x86-64-v3`, `x86-64-v4`), at or below the probed one | the probed row |
-| `--weight-budget BYTES` | stream the weights through this much memory instead of holding them all (`5g`, `4500m` or a byte count); refused on the AMD lane | every weight resident |
+| `--weight-budget BYTES` | stream the weights through this much memory instead of holding them all (`5g`, `4500m` or a byte count); refused on the AMD lane, and on the `nvidia` lane for any model but a mixture of experts | every weight resident |
+| `--expert-host-budget BYTES` | with `--weight-budget` on `--backend nvidia`: host memory that keeps the expert weights already read from disk, so an expert the card no longer holds is not read again (`18g`, a byte count); it must hold at least one token's experts, else refused | none: an expert the card does not hold is read from disk |
 | `--weight-ring N` | with `--weight-budget`: slots in the streaming ring, at least `2` | `2` |
 | `--weight-pin N` | with `--weight-budget`: at most this many layers held resident | no cap |
 | `--weight-pins spread\|prefix` | with `--weight-budget`: which layers are held resident, spread over the stack or the first ones | `spread` |

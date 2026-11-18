@@ -287,7 +287,7 @@ These happen after the model has loaded, so they are not argument errors and do 
 
 > `is only meaningful with --backend cpu`
 
-**Cause.** `--admin` and `--admin-port` go together. `--weight-pin`, `--weight-ring`, `--weight-digest`, `--weight-codec`, `--weight-pins` and `--layout-dir` apply only with `--weight-budget`. `--threads` and `--cpu-isa` apply only to the `cpu` lane.
+**Cause.** `--admin` and `--admin-port` go together. `--weight-pin`, `--weight-ring`, `--weight-digest`, `--weight-codec`, `--weight-pins`, `--layout-dir` and `--expert-host-budget` apply only with `--weight-budget`; `--expert-host-budget` also only with `--backend nvidia`. `--threads` and `--cpu-isa` apply only to the `cpu` lane.
 
 **Fix.** Add the missing flag or drop the one that depends on it.
 
