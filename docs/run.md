@@ -22,16 +22,19 @@ The model comes first; flags follow it.
 1. **A directory** holding `config.json`, a supported tokenizer ([the models page](models.md#what-is-downloaded) lists them) and
    `*.safetensors`, or an image pipeline directory holding `model_index.json`
    ([Generating an image](#generating-an-image)). An existing directory
-   always wins. An argument starting with `./`, `/` or `~` that is not a directory is refused as
-   `no such directory`.
-2. **An alias**: `smollm2`, `smollm2-instruct` (from v0.1.2), `llama-8b`, `qwen3-0.6b`, `qwen3-8b`,
+   always wins. An argument starting with `./`, `/` or `~` that is neither a directory nor a
+   file is refused as `no such directory`.
+2. **A GGUF file's path**, a file on this machine: an argument that starts with `./`, `../` or `/`, or
+   ends in `.gguf` with no `:` in it ([models.md](models.md#a-gguf-file-on-this-machine)). A file named like an alias or
+   like `owner/name` is taken only with `./` in front.
+3. **An alias**: `smollm2`, `smollm2-instruct` (from v0.1.2), `llama-8b`, `qwen3-0.6b`, `qwen3-8b`,
    `qwen3-30b-a3b`, `decider-0.8b`, `smolvlm-256m` or `flux2-klein-4b` (an image pipeline,
    [Generating an image](#generating-an-image)), each a Hugging Face repo pinned to a revision
    ([models.md](models.md)).
-3. **A Hugging Face repo id**, `owner/name` or `owner/name@revision`. Without `@revision` it is `main`.
-4. **One GGUF file of a Hugging Face repo**, `owner/name[@revision]:<quant>` (`unsloth/Qwen3.5-0.8B-GGUF:Q6_K`)
+4. **A Hugging Face repo id**, `owner/name` or `owner/name@revision`. Without `@revision` it is `main`.
+5. **One GGUF file of a Hugging Face repo**, `owner/name[@revision]:<quant>` (`unsloth/Qwen3.5-0.8B-GGUF:Q6_K`)
    or `owner/name[@revision]:<file>.gguf` ([models.md](models.md#gguf-files-of-a-hugging-face-repo)).
-5. **An Ollama tag**, `ollama:<name>[:<tag>]` ([models.md](models.md#ollama-tags)).
+6. **An Ollama tag**, `ollama:<name>[:<tag>]` ([models.md](models.md#ollama-tags)).
 
 An alias, a repo id or a repo's GGUF file is downloaded into the Hugging Face cache the first time and read from there after.
 Anything else is refused before any download.

@@ -162,6 +162,24 @@ publishes for it; an interrupted download resumes. Quantized files run at an f32
 do. What has run on which lane is in [Ollama tags](#ollama-tags) and `caldrix doctor`; a file is admitted
 by its header, and that a repo's file is admitted does not mean it has run.
 
+## A GGUF file on this machine
+
+A path to one GGUF file is a model too: `caldrix run ./model.gguf`, and the same for `caldrix serve`.
+The argument is taken as a file when it starts with `./`, `../` or `/`, or ends in `.gguf` and has no
+`:` in it, and the file exists. So `owner/name:<file>.gguf` is always the Hub's file; put `./` in front
+to name a local file with a colon in its path.
+
+```sh
+caldrix run ./my-model.Q4_K_M.gguf -p "Hello"
+```
+
+Before anything is loaded the file's header is checked as an Ollama tag's is: the architecture, every
+tensor's type, the lane and the fit. The file's name is not read for a quant: the tensors' own types
+decide. Nothing is downloaded and nothing is written beside the file. The
+file is your own, so there is no published SHA-256 to hold it to and none is checked. One part of a
+split GGUF file is refused, and so is `--draft-model` with a file. A file is admitted by its header, and
+that it is admitted does not mean a file like it has run on that lane.
+
 ## caldrix models
 
 `caldrix models` asks the downloaded model index, and the Hugging Face Hub for one repo the index lacks.

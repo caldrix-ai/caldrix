@@ -10,7 +10,7 @@ Inferno's server; the endpoints are in [api.md](api.md).
 caldrix serve <model> [--port 8425] [--host 127.0.0.1] [--ctx N] [--backend auto|hip|metal|cpu] [serving flags]
 ```
 
-The model comes first: a directory, an alias or a Hugging Face repo id `owner/name[@revision]`
+The model comes first: a directory, a GGUF file's path, an alias or a Hugging Face repo id `owner/name[@revision]`
 ([run.md](run.md#the-model-argument), [models.md](models.md)). `--backend` picks the lane as in
 `caldrix run` ([doctor.md](doctor.md)), and `--ctx N` is `--max-context N`.
 
