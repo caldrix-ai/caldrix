@@ -209,7 +209,7 @@ browser names the repo first and refuses before the first weight file.
 
 **Cause.** `--port`, `--host`, `--admin` or `--admin-port` was given to `run`; or `--model-dir`; or `--backend host`.
 
-**Fix.** Use `caldrix serve` for HTTP flags. Give the model as the first argument. Choose `auto`, `hip`, `metal`, `nvidia` or `cpu` for `--backend`; `nvidia` refuses every card but one of compute capability 6.1, 7.5, 8.6, 8.9 or 12.0, and `auto` uses such a card only for a dense Llama, Qwen3 or Qwen2 model in a local directory, or when no other lane is usable ([run.md](run.md#refused-flags), [doctor.md](doctor.md#nvidia)).
+**Fix.** Use `caldrix serve` for HTTP flags. Give the model as the first argument. Choose `auto`, `hip`, `metal`, `nvidia` or `cpu` for `--backend`; `nvidia` refuses every card but one of compute capability 6.1, 7.5, 8.0, 8.6, 8.9 or 12.0, and `auto` uses such a card only for a dense Llama, Qwen3 or Qwen2 model in a local directory, or when no other lane is usable ([run.md](run.md#refused-flags), [doctor.md](doctor.md#nvidia)).
 
 ### A bad value
 
