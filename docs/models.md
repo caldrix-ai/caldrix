@@ -180,6 +180,18 @@ file is your own, so there is no published SHA-256 to hold it to and none is che
 split GGUF file is refused, and so is `--draft-model` with a file. A file is admitted by its header, and
 that it is admitted does not mean a file like it has run on that lane.
 
+The CPU lane reads more kinds of file than the other lanes: the ternary kinds `TQ1_0` and `TQ2_0`,
+`Q1_0`, `Q2_K`, `Q4_1`, `Q5_K`, `IQ4_XS`, the `IQ1`, `IQ2` and `IQ3` kinds, `MXFP4` and `NVFP4`, and BitNet
+b1.58 files. Run one with `--backend cpu`; any other lane refuses such a file by name before loading
+it, and its message says `--backend cpu`. These kinds run from a file on this machine only: a Hub
+reference or an Ollama tag with one of these quant labels is still refused. The files of these kinds that
+have run did so on one `x86-64-v3` CPU only; the `x86-64-v4`, `x86-64-v2` and Arm Neon paths for these kinds
+have been compiled but not run.
+
+```sh
+caldrix run ./bitnet-2b-tq2_0.gguf --backend cpu -p "Hello"
+```
+
 ## caldrix models
 
 `caldrix models` asks the downloaded model index, and the Hugging Face Hub for one repo the index lacks.
