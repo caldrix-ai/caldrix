@@ -320,4 +320,5 @@ read the weights and so comes after the download.
 
 A model with an active sliding window (a Mistral model with `sliding_window` set, or a Qwen model with
 `use_sliding_window: true`) runs at a context no wider than its window: within the window the window changes
-nothing, and a wider `--ctx` is refused with the window's size.
+nothing, and a wider `--ctx` is refused with the window's size. The one exception is a Mistral model on
+`--backend cpu`, which applies the window and runs at any context.
