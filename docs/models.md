@@ -236,6 +236,8 @@ From the top level of the repo, at the resolved commit:
 - `config.json`, first, alone. It must pass the import's checks (below) before anything else is fetched,
   so a refused model costs one small download.
 - `tokenizer.json`, and `tokenizer_config.json` and `generation_config.json` when the repo has them.
+  `generation_config.json` is read for one thing: its `eos_token_id` joins the ids a generation stops on,
+  beside the tokenizer's and `config.json`'s.
   `chat_template.json` is fetched too when the repo has it, and read for the chat template when there is
   no `chat_template.jinja`.
   A repo without `tokenizer.json` needs a SentencePiece `tokenizer.model` instead, or else both
