@@ -324,10 +324,15 @@ Every other architecture is refused by name. Within those, the import refuses:
 - an `lm_head.weight` beside a tied embedding whose shape or type differs from the embedding's;
 - for Qwen3.5, any `config.json` key outside the set it reads, and an active sliding window;
 - a multi-head latent attention conversion (a `config.json` with an `mha2mla` block) other than a Qwen3's
-  `uniform` selection from start point 0; that one runs on the `cpu` lane only, a desk reading and not a
-  hardware run (the engine's 16 greedy tokens equal a torch forward written from a reading of the conversion's
-  code, on `OpenMOSS-Team/qwen3-0_6B-uniform_r_16-d_kv_32-refactor`), and every other lane, the browser,
-  quantizing it, an adapter over it and speculative decoding refuse it by name.
+  `uniform` selection from start point 0 and two `2-norm` conversions of a Qwen2
+  (`OpenMOSS-Team/qwen2-0_5B-rope8-d_kv_16-refactor` and `OpenMOSS-Team/qwen2.5-0_5B-rope8-d_kv_32-refactor`,
+  recognised by their weights, not their names). A `2-norm` repository does not ship the table that says which
+  rotary frequencies each head keeps; inferno carries it for those two, the first from the table the
+  conversion's authors published and the second inferred from the weights and not confirmed by them, and
+  refuses every other `2-norm` model. All three run on the `cpu` lane only, desk readings and not hardware
+  runs (16 greedy tokens equal to a torch forward written from a reading of the conversion's code, at f32;
+  the Qwen3 also at bf16), and every other lane, the browser, quantizing them, an adapter over them and
+  speculative decoding refuse them by name.
 
 A checkpoint whose `config.json` ties the output head to the embedding but which ships a different
 `lm_head.weight` runs with the shipped head, as transformers does; the command line says so at load (the
