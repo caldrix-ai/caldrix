@@ -322,7 +322,12 @@ Every other architecture is refused by name. Within those, the import refuses:
   reading, not a run; the verification files say what has run);
 - dimensions out of bounds or inconsistent with each other;
 - an `lm_head.weight` beside a tied embedding whose shape or type differs from the embedding's;
-- for Qwen3.5, any `config.json` key outside the set it reads, and an active sliding window.
+- for Qwen3.5, any `config.json` key outside the set it reads, and an active sliding window;
+- a multi-head latent attention conversion (a `config.json` with an `mha2mla` block) other than a Qwen3's
+  `uniform` selection from start point 0; that one runs on the `cpu` lane only, a desk reading and not a
+  hardware run (the engine's 16 greedy tokens equal a torch forward written from a reading of the conversion's
+  code, on `OpenMOSS-Team/qwen3-0_6B-uniform_r_16-d_kv_32-refactor`), and every other lane, the browser,
+  quantizing it, an adapter over it and speculative decoding refuse it by name.
 
 A checkpoint whose `config.json` ties the output head to the embedding but which ships a different
 `lm_head.weight` runs with the shipped head, as transformers does; the command line says so at load (the
