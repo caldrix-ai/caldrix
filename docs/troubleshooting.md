@@ -173,7 +173,7 @@ browser names the repo first and refuses before the first weight file.
 
 > `nothing else was downloaded`
 
-**Cause.** The import checks `config.json` before anything else. The architecture is not `LlamaForCausalLM`, `MistralForCausalLM`, `Qwen2ForCausalLM`, `Qwen3ForCausalLM`, `Qwen3MoeForCausalLM`, `Qwen3_5ForCausalLM` or `Qwen3_5ForConditionalGeneration`, or `config.json` declares more than one; or an attention or MLP bias is set on an architecture other than Llama. For a Hub model the message ends by saying nothing else was downloaded.
+**Cause.** The import checks `config.json` before anything else. The architecture is not `LlamaForCausalLM`, `MistralForCausalLM`, `Qwen2ForCausalLM`, `Qwen3ForCausalLM`, `Qwen3MoeForCausalLM`, `Qwen3_5ForCausalLM`, `Qwen3_5ForConditionalGeneration` or `NemotronHForCausalLM` (which runs on the `cpu` lane only: use `--backend cpu`), or `config.json` declares more than one; or an attention or MLP bias is set on an architecture other than Llama. For a Hub model the message ends by saying nothing else was downloaded.
 
 **Fix.** Use a model in one of the supported architectures. The full list of what the import refuses is in [models.md](models.md#what-the-import-refuses).
 

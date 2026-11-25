@@ -58,10 +58,10 @@ not been verified is listed as not verified on hardware; everything else is not 
 Release archives are built for `x86_64-linux` (glibc 2.38 or newer) and, from v0.1.1, `aarch64-darwin`
 (macOS 14.0 or newer on Apple silicon). The installer refuses any other platform.
 
-Models: the import accepts checkpoints of six architectures (`LlamaForCausalLM`,
+Models: the import accepts checkpoints of seven architectures (`LlamaForCausalLM`,
 `MistralForCausalLM`, `Qwen2ForCausalLM`, `Qwen3ForCausalLM`, the mixture-of-experts
-`Qwen3MoeForCausalLM` and Qwen3.5's `Qwen3_5ForCausalLM`, with `Qwen3_5ForConditionalGeneration` as text
-only) in safetensors, bf16, f32 or f16. Mistral is accepted by the import but has not been verified on hardware.
+`Qwen3MoeForCausalLM`, Qwen3.5's `Qwen3_5ForCausalLM`, with `Qwen3_5ForConditionalGeneration` as text
+only, and NemotronH's `NemotronHForCausalLM`, on the `cpu` lane only) in safetensors, bf16, f32 or f16. Mistral is accepted by the import but has not been verified on hardware.
 Aliases name the models Inferno has run on hardware, each pinned to a revision: `smollm2`,
 `smollm2-instruct`, `llama-8b`, `qwen3-0.6b`, `qwen3-30b-a3b` and `decider-0.8b` ([models.md](docs/models.md));
 `smollm2-instruct` (from v0.1.2) is verified on the CPU lane (x86-64-v3), not on Metal or AMD GPUs: its

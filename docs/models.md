@@ -11,7 +11,8 @@ only) in safetensors, bf16, f32 or f16, and SmolVLM's vision-language architectu
 stand-in, which makes no hardware claim. Quantized Ollama tags (Q4_K_M and
 Q8_0) run on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); on the `hip` lane five
 tags were token-exact in f32 on one MI300X ([Ollama tags](#ollama-tags)). Mistral is accepted
-by the import but has not been verified on hardware. FLUX.2 klein 4B, an image pipeline, makes images
+by the import but has not been verified on hardware. NemotronH (`NemotronHForCausalLM`) runs on the `cpu` lane
+only, from a dense checkpoint at the f32 plan or an MLX one ([What the import refuses](#what-the-import-refuses)). FLUX.2 klein 4B, an image pipeline, makes images
 from a prompt on the `cpu` and `metal` lanes ([Image pipelines](#image-pipelines)).
 
 ## Aliases
@@ -305,8 +306,8 @@ A gated repo needs its terms accepted on the Hub with your account, then `HF_TOK
 
 `config.json` must declare exactly one architecture, one of `LlamaForCausalLM`, `MistralForCausalLM`,
 `Qwen2ForCausalLM`, `Qwen3ForCausalLM`, `Qwen3MoeForCausalLM`, `Qwen3_5ForCausalLM`,
-`Qwen3_5ForConditionalGeneration` (text only) and `Idefics3ForConditionalGeneration` (the CPU lane only)
-(`MistralForCausalLM` is accepted, not verified on hardware).
+`Qwen3_5ForConditionalGeneration` (text only), `Idefics3ForConditionalGeneration` (the CPU lane only) and
+`NemotronHForCausalLM` (below) (`MistralForCausalLM` is accepted, not verified on hardware).
 Every other architecture is refused by name. Within those, the import refuses:
 
 - a `torch_dtype` other than bf16, f32 or f16, and any tensor stored as a type other than f32, f16 or bf16,
@@ -332,7 +333,22 @@ Every other architecture is refused by name. Within those, the import refuses:
   refuses every other `2-norm` model. All three run on the `cpu` lane only, desk readings and not hardware
   runs (16 greedy tokens equal to a torch forward written from a reading of the conversion's code, at f32;
   the Qwen3 also at bf16), and every other lane, the browser, quantizing them, an adapter over them and
-  speculative decoding refuse them by name.
+  speculative decoding refuse them by name;
+- NemotronH (`NemotronHForCausalLM`) anywhere but the `cpu` lane: it runs there only, from a dense checkpoint
+  at the f32 plan, a desk reading and not a hardware run (`caldrix run --backend cpu` gave the reference's 16
+  greedy tokens on one prompt for `Nemotron-3.5-Lightning-0.9B-A0.8B-small`, which has experts, and for
+  `NVIDIA-Nemotron-3-Nano-4B-BF16`). An MLX checkpoint of it runs there too, kept compressed where a `cpu`
+  record holds its variant and expanded in memory at load otherwise: the records are the 0.9B converted to
+  affine 4-bit (group 64) and to mxfp4, and `mlx-community`'s 4-, 6- and 8-bit Nano-4B conversions, each 16
+  greedy tokens equal to the reference over its dequantized weights through `caldrix run`; the expanded route
+  has run on the two 0.9B conversions alone. Elastic-12B's mxfp4 conversion has no run of its own: it is kept
+  compressed because the 0.9B mxfp4 record admits its variant. A NemotronH checkpoint quantized by any method
+  but MLX (GPTQ, AWQ, compressed-tensors, bitsandbytes, FP8 or another) is refused by name on every lane, before
+  any weight file is downloaded (and at import for a local directory); an MLX one with a global scale is refused
+  by name, before any weight file is downloaded when its `quantization` block declares it or the Hub's
+  safetensors headers carry it, and at load from a local directory; a GGUF NemotronH file is refused at its header, by its architecture
+  string; `--dtype bf16` is refused by name at load. Every other lane, quantizing it and the browser refuse it
+  by name, whatever its format, and a Hub download for another lane stops before any weight file.
 
 A checkpoint whose `config.json` ties the output head to the embedding but which ships a different
 `lm_head.weight` runs with the shipped head, as transformers does; the command line says so at load (the

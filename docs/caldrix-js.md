@@ -132,6 +132,9 @@ headless Chromium on a CPU, on that one Q6_K file: its reference's eight tokens,
 default context, which is lowered to fit the browser's memory (the browser-gate record, entry 68). No device, no
 other file and no speed has been measured.
 
+A NemotronH checkpoint (`NemotronHForCausalLM`) is refused by name on both tiers, before its weights are
+downloaded: it runs on the command line's `cpu` lane only (`caldrix run --backend cpu`).
+
 `smolvlm-256m` (SmolVLM-256M-Instruct, a vision-language model) runs in the browser on both tiers:
 `chat` takes images as well as text, and `backend: "auto"` no longer falls back to the wasm tier for it.
 On the wasm tier it has run in Playwright's headless Chromium on Linux (the browser-gate record, entries 59
