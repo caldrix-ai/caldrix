@@ -315,7 +315,7 @@ Every other architecture is refused by name. Within those, the import refuses:
 - any tensor the architecture does not use, since the compiler would ignore it (Qwen3.5's
   multi-token-prediction tensors, `mtp.*`, and the vision tower, `model.visual.*`, are skipped by name and
   never read);
-- an activation other than SiLU, an attention or MLP bias (except Qwen2's own q/k/v bias, and a Llama's `attention_bias` or `mlp_bias`), interleaved RoPE, and any `rope_scaling` other than Llama 3's (Llama 3's is applied to the RoPE table in
+- an activation other than SiLU, an attention or MLP bias (except Qwen2's own q/k/v bias, and a Llama's `attention_bias` or `mlp_bias`), interleaved RoPE, and any `rope_scaling` other than Llama 3's, `linear` and `dynamic` (a `dynamic` model runs up to its own `max_position_embeddings`, where its RoPE table is the unscaled one, and a wider context is refused by name; Llama 3's is applied to the RoPE table in
   code, and a line says so at load; the Metal lane has read a scaled table on hardware, token-exact with
   the scaling taken from a `config.json` and from a GGUF's `rope_freqs.weight`, in a run on an Apple M1
   Max, the AMD lane likewise in a run on an MI300X, and the CPU lane at the desk on the 1B — a desk
