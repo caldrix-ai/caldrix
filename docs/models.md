@@ -12,7 +12,7 @@ stand-in, which makes no hardware claim. Quantized Ollama tags (Q4_K_M and
 Q8_0) run on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); on the `hip` lane five
 tags were token-exact in f32 on one MI300X ([Ollama tags](#ollama-tags)). Mistral is accepted
 by the import but has not been verified on hardware. NemotronH (`NemotronHForCausalLM`) runs on the `cpu` lane
-only, from a dense checkpoint at the f32 plan or an MLX one ([What the import refuses](#what-the-import-refuses)). FLUX.2 klein 4B, an image pipeline, makes images
+only, from a dense checkpoint at the f32 plan, an MLX one or a GGUF file in the kinds its records hold ([What the import refuses](#what-the-import-refuses)). FLUX.2 klein 4B, an image pipeline, makes images
 from a prompt on the `cpu` and `metal` lanes ([Image pipelines](#image-pipelines)).
 
 ## Aliases
@@ -353,8 +353,30 @@ Every other architecture is refused by name. Within those, the import refuses:
   its `scope`, or MLX's own per-module form on the expert stacks) is expanded in memory at load, on the evidence of
   Inferno's tests over two tiny generated checkpoints alone (no real checkpoint with a global scale has run), and
   one with a global scale in any other form is refused by name, before any weight file is downloaded when its `quantization` block declares it or the Hub's
-  safetensors headers carry it, and at load from a local directory; a GGUF NemotronH file is refused at its header, by its architecture
-  string; `--dtype bf16` is refused by name at load. Every other lane, quantizing it and the browser refuse it
+  safetensors headers carry it, and at load from a local directory. A GGUF NemotronH file (architecture `nemotron_h`
+  or `nemotron_h_moe`) is read on the `cpu` lane at the f32 plan, with a dt floor of 0.001 (a GGUF file carries
+  none), its expert stacks decoded to f32 at load. It stops on the file's end-of-sequence token alone (id 11),
+  where a safetensors checkpoint stops on ids 2 and 11, and it honours the file's `add_bos_token`, so the Nano-4B
+  GGUF files prepend `<s>`. caldrix's fit counts the decoded stacks (in place of their stored blocks) and refuses a file
+  too large for the machine before any download; the engine loaded on its own, without caldrix, does not size the
+  machine. Elastic-12B-A2B's header's stacks alone need over 43 GB at f32, though that file is refused by kind
+  first. It runs only in the kinds a NemotronH GGUF record holds at each place: `Q8_0`, `Q4_K`, `Q5_0`, `Q5_K`,
+  `Q6_K` and `Q4_1` at the matmuls and `Q8_0`, `Q5_0` and `Q4_1` at the embedding. Those are the kinds of the
+  Nano-4B's published `Q8_0`, `Q4_K_M` and `Q4_1` files and of the 0.9B converted to `Q8_0`, on whose records the
+  engine and `caldrix run --backend cpu` gave the reference's 16 greedy tokens over the file's dequantized weights;
+  no published file with experts has run. Its expert stacks are admitted in any kind the `cpu` lane decodes
+  (decoded to f32 at load; on a real file only `Q8_0` stacks have run). Every other quantized kind at a matmul or the
+  embedding, and an expert stack in a kind the lane does not decode, is refused by kind, by name, before any
+  download, and an all-F32 file is accepted with no real-model record, on Inferno's tests over tiny generated files
+  alone. The Hub's and Ollama's quant-label gates are unchanged (F32, F16, BF16, `Q8_0`, `Q4_K_M` and `Q6_K`), so
+  the Nano-4B's `Q4_1` file runs as a local file only: from the Hub it is refused by its label, before any
+  download. A GGUF NemotronH file
+  off the `cpu` lane, with an F16 or BF16 matmul or embedding (NemotronH plans at f32 and no record holds one),
+  with a per-tensor scale (the NVFP4 GGUFs), latent expert tensors, grouped routing without
+  its used count, a multi-token-prediction block or a tied head is refused by name at its header, before any
+  download, and the browser refuses both architecture names by name. `--dtype bf16` is refused by name at load
+  (at the header for a GGUF file), and `--weight-budget` (a streamed load, which NemotronH does not take in any
+  format) by name before any load or download. Every other lane, quantizing it and the browser refuse it
   by name, whatever its format, and a Hub download for another lane stops before any weight file.
 
 A checkpoint whose `config.json` ties the output head to the embedding but which ships a different
