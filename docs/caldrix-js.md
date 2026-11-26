@@ -63,9 +63,13 @@ for (recognised by a fingerprint of the weights, never by name; one of the two s
 confirmed by the conversion's authors). The block alone admits it at the precheck; any other block is refused
 there by name before a weight is fetched, a Qwen2 or Qwen3 without the block is refused as an unsupported
 architecture, and weights of a carried shape whose fingerprint is not a carried conversion's are refused as not
-loadable once the weight file is in, before anything runs. Such a model is read whole on both tiers. In headless
-Chromium a tiny random-weight `uniform` model gave its reference's tokens on the wasm tier and on the WebGPU tier
-on a software adapter, a CPU; no browser has loaded a published conversion, and no device has run one.
+loadable once the weight file is in, before anything runs. Such a model is read whole on the wasm tier and
+streamed into the device's buffers on the WebGPU tier, each row the converted attention assembles built as its
+source arrives and the fingerprint taken from the stream, checked at its end. In headless Chromium a tiny
+random-weight `uniform` model gave its reference's tokens on the wasm tier and on the WebGPU tier on a software
+adapter, a CPU, and the three published conversions gave the CPU lane's tokens on the wasm tier and, at f32
+storage, on the WebGPU tier on that software adapter, the two `2-norm` ones admitted by their fingerprint; no GPU
+has run one.
 
 A generation stops on the model's end-of-sequence ids: the tokenizer's, `config.json`'s `eos_token_id`, and, for a Hub repo whose listing has a `generation_config.json`, that file's `eos_token_id` too (a number or a list), on both tiers. The file is fetched once, with the tokenizer files; one that is not a JSON object adds nothing, and a repo without it loads as before. An alias and a GGUF file read none: a GGUF file's stop ids are its metadata's.
 
