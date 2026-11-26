@@ -362,5 +362,5 @@ A model with an active sliding window (a Mistral model with `sliding_window` set
 `use_sliding_window: true`) runs at a context no wider than its window: within the window the window changes
 nothing, and a wider `--ctx` is refused with the window's size. The exceptions apply the window and run at
 any context: a Mistral or Qwen model on `--backend cpu`, and a Mistral model in the browser (caldrix.js,
-both tiers). `--backend metal` applies the window too; on one M1 Max it matched the reference's 48 tokens for TinyMistral-248M past its window. A Qwen2 or Qwen3 model windows only the layers its `config.json` marks (`layer_types`, full and windowed layers in any order, or
+both tiers). `--backend metal` applies the window too; on one M1 Max it matched the reference's 48 tokens for TinyMistral-248M past its window. `--backend nvidia` is built to apply the window as well, but no NVIDIA card has run it yet, so `--backend auto` does not pick the card for a model with an active window; `--backend hip` keeps the context limit. A Qwen2 or Qwen3 model windows only the layers its `config.json` marks (`layer_types`, full and windowed layers in any order, or
 the layers from `max_window_layers` on), as transformers does.
