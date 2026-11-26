@@ -344,8 +344,11 @@ Every other architecture is refused by name. Within those, the import refuses:
   has run on the two 0.9B conversions alone. Elastic-12B's mxfp4 conversion has no run of its own: it is kept
   compressed because the 0.9B mxfp4 record admits its variant. A NemotronH checkpoint quantized by any method
   but MLX (GPTQ, AWQ, compressed-tensors, bitsandbytes, FP8 or another) is refused by name on every lane, before
-  any weight file is downloaded (and at import for a local directory); an MLX one with a global scale is refused
-  by name, before any weight file is downloaded when its `quantization` block declares it or the Hub's
+  any weight file is downloaded (and at import for a local directory); an MLX one with an nvfp4 global
+  scale in one of two recognised forms (a direct multiplier declared at the top of its `quantization` block with
+  its `scope`, or MLX's own per-module form on the expert stacks) is expanded in memory at load, on the evidence of
+  Inferno's tests over two tiny generated checkpoints alone (no real checkpoint with a global scale has run), and
+  one with a global scale in any other form is refused by name, before any weight file is downloaded when its `quantization` block declares it or the Hub's
   safetensors headers carry it, and at load from a local directory; a GGUF NemotronH file is refused at its header, by its architecture
   string; `--dtype bf16` is refused by name at load. Every other lane, quantizing it and the browser refuse it
   by name, whatever its format, and a Hub download for another lane stops before any weight file.
