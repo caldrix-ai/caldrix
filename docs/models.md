@@ -330,10 +330,14 @@ Every other architecture is refused by name. Within those, the import refuses:
   recognised by their weights, not their names). A `2-norm` repository does not ship the table that says which
   rotary frequencies each head keeps; inferno carries it for those two, the first from the table the
   conversion's authors published and the second inferred from the weights and not confirmed by them, and
-  refuses every other `2-norm` model. All three run on the `cpu` lane only, desk readings and not hardware
+  refuses every other `2-norm` model. All three run on the `cpu` lane, desk readings and not hardware
   runs (16 greedy tokens equal to a torch forward written from a reading of the conversion's code, at f32;
-  the Qwen3 also at bf16), and every other lane, the browser, quantizing them, an adapter over them and
-  speculative decoding refuse them by name;
+  the Qwen3 also at bf16). The browser (caldrix.js, both tiers) loads the same forms by repo id, a conversion
+  read whole and a `2-norm` model's weights checked against the carried fingerprints once its weight file is in:
+  in headless Chromium a tiny random-weight `uniform` model gave its reference's tokens on the WebAssembly tier
+  and on the WebGPU tier on a software adapter, a CPU, and that is all a browser has run — no published
+  conversion has been loaded in a browser and no device has run one. Every other lane, quantizing them, an
+  adapter over them and speculative decoding refuse them by name;
 - NemotronH (`NemotronHForCausalLM`) anywhere but the `cpu` lane: it runs there only, from a dense checkpoint
   at the f32 plan, a desk reading and not a hardware run (`caldrix run --backend cpu` gave the reference's 16
   greedy tokens on one prompt for `Nemotron-3.5-Lightning-0.9B-A0.8B-small`, which has experts, and for
