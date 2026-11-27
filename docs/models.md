@@ -6,7 +6,8 @@ accepts dense Llama, Mistral, Qwen2 and Qwen3 checkpoints, the Qwen3 mixture-of-
 (`Qwen3MoeForCausalLM`) and Qwen3.5 (`Qwen3_5ForCausalLM`, and `Qwen3_5ForConditionalGeneration` as text
 only) in safetensors, bf16, f32 or f16, and SmolVLM's vision-language architecture
 (`Idefics3ForConditionalGeneration`), which runs on the `cpu`, `hip` and `metal` lanes and in the browser on both tiers from caldrix.js 0.16.0 ([Aliases](#aliases)); f16 weights are computed in bf16 by default, or exactly with
-`--dtype f32`; quantized safetensors checkpoints are refused. Qwen3.5 runs on the `cpu`,
+`--dtype f32`; quantized safetensors checkpoints are admitted in the formats
+[Quantized safetensors checkpoints](#quantized-safetensors-checkpoints) names. Qwen3.5 runs on the `cpu`,
 `hip` and `metal` lanes, and on the `nvidia` lane by `--backend nvidia` only ([Aliases](#aliases)); `inferno serve` also serves it on `--backend host`, its off-hardware test
 stand-in, which makes no hardware claim. Quantized Ollama tags (Q4_K_M and
 Q8_0) run on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); on the `hip` lane five
@@ -136,7 +137,25 @@ A Q4_K_M, Q8_0 or Q6_K tag is read and sized before any download. It runs at an 
   `qwen2.5:0.5b-instruct-q4_K_M`, `qwen2.5:0.5b-instruct-q8_0` and `deepseek-r1:8b-llama-distill-q4_K_M`
   were token-exact in f32 by their token gates (eight greedy tokens of one prompt each).
 
-Quantized safetensors checkpoints stay refused ([What the import refuses](#what-the-import-refuses)).
+Quantized safetensors checkpoints are covered in
+[Quantized safetensors checkpoints](#quantized-safetensors-checkpoints).
+
+## Quantized safetensors checkpoints
+
+`caldrix doctor`'s `model support` block says what is admitted, on which lane, and what ran:
+
+- GPTQ, AWQ, compressed-tensors int and bitsandbytes nf4 checkpoints are admitted. On the `cpu` lane each is
+  kept compressed where a `cpu` record holds its blocks (the `cpu` lane has desk readings of one checkpoint of
+  each format, not runs); on the `metal`, `hip` and `nvidia` lanes it is expanded in memory at load. Those
+  lanes admit them and have run none.
+- Jlama Q4 checkpoints are admitted and expanded in memory at load on every lane; the `cpu` lane has a desk
+  reading of one checkpoint, not a run.
+- MLX checkpoints are kept compressed on the `cpu` lane where a `cpu` record holds their variant, and
+  expanded in memory at load otherwise; the `cpu` lane has desk readings, not runs, and no other lane has
+  run one. Some MLX checkpoints with a mixture of experts are refused before any download; the `model
+  support` block names which.
+- FP8 checkpoints and every other quantization method are refused by name, before any weight file is
+  downloaded.
 
 ## GGUF files of a Hugging Face repo
 

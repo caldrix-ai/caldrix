@@ -2,8 +2,9 @@
 
 `caldrix doctor` reports, for each of the four lanes (Apple GPU through Metal, NVIDIA GPU, AMD GPU through
 HIP, the CPU), whether this machine can use it and why, then what models Inferno runs on which lane. It
-reports only what it probed, launches no kernel, and exits with status 1 when no lane is usable. One NVIDIA
-compute capability, 6.1, is accepted; the `nvidia` line says `no` for every other card.
+reports only what it probed, launches no kernel, and exits with status 1 when no lane is usable. Six NVIDIA
+compute capabilities are accepted, 6.1, 7.5, 8.0, 8.6, 8.9 and 12.0; the `nvidia` line says `no` for every other
+card.
 
 ## Run it
 
@@ -99,10 +100,12 @@ no kernel was launched; `caldrix run` is what shows a lane works
 
 ### `nvidia`
 
-One compute capability, 6.1, is accepted: on such a card the line says `usable`, and `--backend nvidia` runs
-a dense model there. Inferno's kernel and token tests, `caldrix run` and one `caldrix serve` request passed
-on one GeForce GTX 1080 with three small dense models (SmolLM2-135M, Qwen3-0.6B and Qwen2.5-0.5B-Instruct), by
-`--backend nvidia`; no other card or model has been run by `caldrix`. A quantized GGUF file runs on this lane by `--backend nvidia` only (Inferno's own tests ran Q8_0 and Q4_K_M files on that card, and `caldrix run` and one `caldrix serve` request passed there on one Q4_K_M Ollama tag of SmolLM2-135M). The safetensors Qwen3.5 model runs on this lane by `--backend nvidia` only (Inferno's own tests ran it on that card, and `caldrix run` and one `caldrix serve` request passed there on Qwen3.5-0.8B-Base). A quantized Qwen3.5 file runs on this lane by `--backend nvidia` only: Inferno's own token tests ran a Q6_K and a Q8_0 file of the 0.8B on that card, and `caldrix run` and one `caldrix serve` request passed there on the Q8_0 Ollama tag `qwen3.5:0.8b`. A model that takes images (SmolVLM) runs on this lane by `--backend nvidia` only: Inferno's own token test ran SmolVLM-256M on that card, and `caldrix serve` (four image requests) and `caldrix run -i` (one reply) gave the reference tokens there. A mixture-of-experts model runs on this lane by `--backend nvidia` with `--weight-budget` only, its expert weights streamed from disk through that much of the card's memory; `--expert-host-budget` keeps the experts already read in host memory. Inferno's own token test ran Qwen3-30B-A3B that way on one GeForce GTX 1080 and one GTX 1080 Ti (eight greedy tokens of one prompt, the reference's), and on that GTX 1080 Ti `caldrix run` and `caldrix serve` (two requests) gave the same tokens with a 6 GiB `--weight-budget` and an 18 GiB `--expert-host-budget`. For any other model `--weight-budget` is refused on this lane. A quantized Qwen3.5 file whose value heads outnumber its key heads (the 27B files) and image generation are refused on this lane. For every other card the line says
+Six compute capabilities are accepted, 6.1, 7.5, 8.0, 8.6, 8.9 and 12.0: on such a card the line says
+`usable`, and `--backend nvidia` runs a dense model there. Inferno's kernel and token tests, `caldrix run` and
+one `caldrix serve` request passed by `--backend nvidia` with three small dense models (SmolLM2-135M,
+Qwen3-0.6B and Qwen2.5-0.5B-Instruct) on one card of each capability: a GeForce GTX 1080 (6.1), an RTX 2080 Ti
+(7.5), an A100 (8.0), an RTX 3060 (8.6), an RTX 4070 (8.9) and an RTX 5070 (12.0). The rest of this paragraph
+names what ran on the GTX 1080 only, unless it names another card. A quantized GGUF file runs on this lane by `--backend nvidia` only (Inferno's own tests ran Q8_0 and Q4_K_M files on that card, and `caldrix run` and one `caldrix serve` request passed there on one Q4_K_M Ollama tag of SmolLM2-135M). The safetensors Qwen3.5 model runs on this lane by `--backend nvidia` only (Inferno's own tests ran it on that card, and `caldrix run` and one `caldrix serve` request passed there on Qwen3.5-0.8B-Base). A quantized Qwen3.5 file runs on this lane by `--backend nvidia` only: Inferno's own token tests ran a Q6_K and a Q8_0 file of the 0.8B on that card, and `caldrix run` and one `caldrix serve` request passed there on the Q8_0 Ollama tag `qwen3.5:0.8b`. A model that takes images (SmolVLM) runs on this lane by `--backend nvidia` only: Inferno's own token test ran SmolVLM-256M on that card, and `caldrix serve` (four image requests) and `caldrix run -i` (one reply) gave the reference tokens there. A mixture-of-experts model runs on this lane by `--backend nvidia` with `--weight-budget` only, its expert weights streamed from disk through that much of the card's memory; `--expert-host-budget` keeps the experts already read in host memory. Inferno's own token test ran Qwen3-30B-A3B that way on one GeForce GTX 1080 and one GTX 1080 Ti (eight greedy tokens of one prompt, the reference's), and on that GTX 1080 Ti `caldrix run` and `caldrix serve` (two requests) gave the same tokens with a 6 GiB `--weight-budget` and an 18 GiB `--expert-host-budget`; it ran the same way on one RTX 3060, one Tesla T4, one RTX 4070, one RTX 5070 and one A100. For any other model `--weight-budget` is refused on this lane. A quantized Qwen3.5 file whose value heads outnumber its key heads (the 27B files) and image generation are refused on this lane. For every other card the line says
 `no`, and `--backend nvidia` is refused with the same reason before anything is downloaded.
 
 **What `--backend auto` does with the GPU.** On Linux, with an NVIDIA GPU of compute capability 6.1, 7.5, 8.0, 8.6, 8.9 or 12.0 and the
@@ -110,7 +113,8 @@ NVIDIA driver, `caldrix run` and `caldrix serve` under `auto` use the GPU in two
 
 - **A dense Llama, Qwen3 or Qwen2 model in a local directory that fits the GPU's free memory.** These are
   the families whose token tests have passed on an NVIDIA GPU, and that `caldrix run` and `caldrix serve`
-  have run there (SmolLM2-135M, Qwen3-0.6B and Qwen2.5-0.5B-Instruct, one GeForce GTX 1080), and the
+  have run there (SmolLM2-135M, Qwen3-0.6B and Qwen2.5-0.5B-Instruct, on one card of each accepted
+  capability), and the
   directory's `config.json` says what it is before anything is loaded. `auto` uses the GPU for it ahead of
   the `hip` and `cpu` lanes.
 - **When no other lane is usable,** any dense model the lane runs that fits the GPU's free memory: a model
@@ -132,8 +136,9 @@ directory the fit counts the weight files' size, which over-counts a model store
 directory close to the GPU's size stays off it. `--backend nvidia` forces the GPU for any dense model the
 lane runs, and `--backend cpu` forces the CPU.
 
-`auto` choosing the GPU has not run on an NVIDIA card: the choice is tested without one, and the read of
-the GPU's free memory was verified on one GeForce GTX 1080 by a test, not by `caldrix run`. `auto` taking
+`auto` choosing the GPU has run by `caldrix run` on a local directory of each of those three models, with a
+usable CPU lane beside the card, on one card of each accepted capability. `auto`'s rule for a machine where no
+other lane is usable, and `caldrix serve` and `caldrix pool` under `auto`, are tested without a card. `auto` taking
 the GPU says the lane runs the model, not that it is faster than the CPU lane. The free memory is read once,
 before the load: if another process fills the GPU in between, the load fails and `--backend cpu` runs the
 model.

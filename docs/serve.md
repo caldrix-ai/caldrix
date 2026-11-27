@@ -7,7 +7,7 @@ Inferno's server; the endpoints are in [api.md](api.md).
 ## Usage
 
 ```text
-caldrix serve <model> [--port 8425] [--host 127.0.0.1] [--ctx N] [--backend auto|hip|metal|cpu] [serving flags]
+caldrix serve <model> [--port 8425] [--host 127.0.0.1] [--ctx N] [--backend auto|hip|metal|nvidia|cpu] [serving flags]
 ```
 
 The model comes first: a directory, a GGUF file's path, an alias or a Hugging Face repo id `owner/name[@revision]`
