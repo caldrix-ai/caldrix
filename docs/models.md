@@ -345,8 +345,11 @@ Every other architecture is refused by name. Within those, the import refuses:
   record holds its variant and expanded in memory at load otherwise: the records are the 0.9B converted to
   affine 4-bit (group 64) and to mxfp4, and `mlx-community`'s 4-, 6- and 8-bit Nano-4B conversions, each 16
   greedy tokens equal to the reference over its dequantized weights through `caldrix run`; the expanded route
-  has run on the two 0.9B conversions alone. Elastic-12B's mxfp4 conversion has no run of its own: it is kept
-  compressed because the 0.9B mxfp4 record admits its variant. A NemotronH checkpoint quantized by any method
+  has run on the two 0.9B conversions alone. On the compressed route a checkpoint with experts keeps its expert
+  stacks in their stored kind, and it is kept compressed only where a `cpu` record has run its stacks' variant
+  that way: affine 4-bit (group 64) and mxfp4, the 0.9B conversions' records, where `caldrix run` gave the
+  reference's 16 greedy tokens with the stacks in kind; any other stack variant expands. Elastic-12B's mxfp4
+  conversion is kept compressed by its variant and has no run of its own. A NemotronH checkpoint quantized by any method
   but MLX (GPTQ, AWQ, compressed-tensors, bitsandbytes, FP8 or another) is refused by name on every lane, before
   any weight file is downloaded (and at import for a local directory); an MLX one with an nvfp4 global
   scale in one of two recognised forms (a direct multiplier declared at the top of its `quantization` block with
@@ -355,23 +358,27 @@ Every other architecture is refused by name. Within those, the import refuses:
   one with a global scale in any other form is refused by name, before any weight file is downloaded when its `quantization` block declares it or the Hub's
   safetensors headers carry it, and at load from a local directory. A GGUF NemotronH file (architecture `nemotron_h`
   or `nemotron_h_moe`) is read on the `cpu` lane at the f32 plan, with a dt floor of 0.001 (a GGUF file carries
-  none), its expert stacks decoded to f32 at load. It stops on the file's end-of-sequence token alone (id 11),
+  none), its expert stacks served as stored, in their kind. It stops on the file's end-of-sequence token alone (id 11),
   where a safetensors checkpoint stops on ids 2 and 11, and it honours the file's `add_bos_token`, so the Nano-4B
-  GGUF files prepend `<s>`. caldrix's fit counts the decoded stacks (in place of their stored blocks) and refuses a file
-  too large for the machine before any download; the engine loaded on its own, without caldrix, does not size the
-  machine. Elastic-12B-A2B's header's stacks alone need over 43 GB at f32, though that file is refused by kind
-  first. It runs only in the kinds a NemotronH GGUF record holds at each place: `Q8_0`, `Q4_K`, `Q5_0`, `Q5_K`,
+  GGUF files prepend `<s>`. caldrix's fit counts the stacks at their stored size and refuses a file too large for
+  the machine before any download; the engine loaded on its own, without caldrix, does not size the machine. It
+  runs only in the kinds a NemotronH GGUF record holds at each place: `Q8_0`, `Q4_K`, `Q5_0`, `Q5_K`,
   `Q6_K` and `Q4_1` at the matmuls and `Q8_0`, `Q5_0` and `Q4_1` at the embedding. Those are the kinds of the
   Nano-4B's published `Q8_0`, `Q4_K_M` and `Q4_1` files and of the 0.9B converted to `Q8_0`, on whose records the
   engine and `caldrix run --backend cpu` gave the reference's 16 greedy tokens over the file's dequantized weights;
-  no published file with experts has run. Its expert stacks are admitted in any kind the `cpu` lane decodes
-  (decoded to f32 at load; on a real file only `Q8_0` stacks have run). Every other quantized kind at a matmul or the
-  embedding, and an expert stack in a kind the lane does not decode, is refused by kind, by name, before any
-  download, and an all-F32 file is accepted with no real-model record, on Inferno's tests over tiny generated files
+  no published file with experts has run. Its expert stacks run compressed on the `cpu` lane only in a kind a
+  NemotronH GGUF record has run them in: `Q8_0`, `Q4_0`, `Q4_1`, `Q5_0`, `Q5_1` and `MXFP4`, on the records of
+  the 0.9B converted to `Q8_0` and of five copies of it whose stacks alone were re-quantized at the desk to each
+  other kind (the engine and `caldrix run --backend cpu` gave the reference's 16 greedy tokens with the stacks in
+  kind). Admission is by kind and place, not by model: Lightning-30B's published `Q4_0` file (`Q8_0` matmuls and
+  embedding, `Q4_0` stacks) is admitted by its kinds and has no run of its own (from the Hub its `Q4_0` label is
+  refused, below), and Elastic-12B's `Q2_K` file is refused by kind. An expert stack in any other kind is refused
+  by kind, as is every other quantized kind at a matmul or the embedding, by name, before any download, and an all-F32 file is accepted with no real-model record, on Inferno's tests over tiny generated files
   alone. The Hub's and Ollama's quant-label gates are unchanged (F32, F16, BF16, `Q8_0`, `Q4_K_M` and `Q6_K`), so
   the Nano-4B's `Q4_1` file runs as a local file only: from the Hub it is refused by its label, before any
   download. A GGUF NemotronH file
-  off the `cpu` lane, with an F16 or BF16 matmul or embedding (NemotronH plans at f32 and no record holds one),
+  off the `cpu` lane, with an F16 or BF16 matmul, embedding or expert stack (NemotronH plans at f32 and no record
+  holds one),
   with a per-tensor scale (the NVFP4 GGUFs), latent expert tensors, grouped routing without
   its used count, a multi-token-prediction block or a tied head is refused by name at its header, before any
   download, and the browser refuses both architecture names by name. `--dtype bf16` is refused by name at load
