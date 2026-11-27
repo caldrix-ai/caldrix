@@ -40,20 +40,21 @@ takes no other option. When the directory is not on your `PATH`, the script prin
 
 Any other platform is refused by name. On Linux the script reads the glibc version from `ldd --version`
 and refuses a host below 2.38, or a host whose `ldd` reports no glibc (musl, for example). The refusal
-names the container route instead: the CPU image `ghcr.io/caldrix-ai/caldrix:latest-cpu` ([below](#the-cpu-container-image)). On macOS the script reads
+names the container route instead: the image `ghcr.io/caldrix-ai/caldrix:latest` ([below](#the-cpu-container-image)). On macOS the script reads
 `sw_vers -productVersion` and refuses a Mac below macOS 14.0 before downloading anything.
 
 ## The CPU container image
 
-The CPU image is published as `ghcr.io/caldrix-ai/caldrix:0.2.0-cpu` (also `latest-cpu`): linux/amd64, a pinned
-base image, built from the published release archive. Its entrypoint is `caldrix`, and its model cache is
+The image is published as `ghcr.io/caldrix-ai/caldrix:0.2.0` (also `latest`): linux/amd64, Ubuntu 24.04
+pinned by digest, with the published release archive's `caldrix` and `ld.lld`; it is checked on the CPU lane
+before it is pushed. The earlier tags `0.2.0-cpu` and `latest-cpu` stay published and carry the same binaries. Its entrypoint is `caldrix`, and its model cache is
 `HF_HOME=/data/huggingface`, so a volume there avoids downloading the model again:
 
 ```sh
-docker run -v caldrix-hf:/data/huggingface ghcr.io/caldrix-ai/caldrix:0.2.0-cpu \
+docker run -v caldrix-hf:/data/huggingface ghcr.io/caldrix-ai/caldrix:0.2.0 \
   run smollm2-instruct -p "The capital of France is" --max-tokens 8
 
-docker run -v caldrix-hf:/data/huggingface -p 8425:8425 ghcr.io/caldrix-ai/caldrix:0.2.0-cpu \
+docker run -v caldrix-hf:/data/huggingface -p 8425:8425 ghcr.io/caldrix-ai/caldrix:0.2.0 \
   serve smollm2-instruct --host 0.0.0.0
 ```
 

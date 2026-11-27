@@ -20,7 +20,7 @@ Every refusal caldrix prints, with its cause and its fix. Each quoted message is
 
 **Cause.** On Linux the installer reads the glibc version from `ldd --version`. The first message means `ldd` reported none (musl, for example). The second means a glibc was found and it is below the floor the message names (2.38).
 
-**Fix.** Use a host with glibc 2.38 or newer. The message also names the container route: the CPU image `ghcr.io/caldrix-ai/caldrix:latest-cpu`, which is CPU only ([install.md](install.md#the-cpu-container-image)). The AMD (ROCm) image is not published yet.
+**Fix.** Use a host with glibc 2.38 or newer. The message also names the container route: the image `ghcr.io/caldrix-ai/caldrix:latest`, which runs the CPU lane ([install.md](install.md#the-cpu-container-image)); a GPU lane inside the container has not been run yet.
 
 ### The download cannot be verified
 
