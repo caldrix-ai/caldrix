@@ -385,6 +385,10 @@ Every other architecture is refused by name. Within those, the import refuses:
   (at the header for a GGUF file), and `--weight-budget` (a streamed load, which NemotronH does not take in any
   format) by name before any load or download. Every other lane, quantizing it and the browser refuse it
   by name, whatever its format, and a Hub download for another lane stops before any weight file.
+  The `metal` lane has NemotronH's kernels and plans every one of its layer kinds at the f32 plan (a quantized
+  file's expert stacks expanded to f32 at load), its decode running NemotronH's matrix products through the general
+  matrix-multiply path rather than the decode path other models take; that has been checked at the desk on an
+  off-hardware stand-in only. No Mac has run it, so the `metal` lane refuses NemotronH by name until one has.
 
 A checkpoint whose `config.json` ties the output head to the embedding but which ships a different
 `lm_head.weight` runs with the shipped head, as transformers does; the command line says so at load (the
