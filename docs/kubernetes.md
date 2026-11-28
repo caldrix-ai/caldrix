@@ -1,7 +1,7 @@
 # Kubernetes
 
 The `caldrix` Helm chart runs one `caldrix serve` of one model on Kubernetes, from the
-[CPU container image](install.md#the-cpu-container-image). The server it runs is the same OpenAI-compatible
+[container image](install.md#the-cpu-container-image). The server it runs is the same OpenAI-compatible
 one as on your machine, so the [HTTP API](api.md) and the [`caldrix serve` flags](serve.md) apply unchanged.
 The chart's source is [caldrix-ai/helm-charts](https://github.com/caldrix-ai/helm-charts); its package is
 `oci://ghcr.io/caldrix-ai/charts/caldrix`.
@@ -11,7 +11,7 @@ The chart's source is [caldrix-ai/helm-charts](https://github.com/caldrix-ai/hel
 With Helm 3.8 or newer:
 
 ```sh
-helm install caldrix oci://ghcr.io/caldrix-ai/charts/caldrix --version 0.1.0 --namespace caldrix --create-namespace
+helm install caldrix oci://ghcr.io/caldrix-ai/charts/caldrix --version 0.2.0 --namespace caldrix --create-namespace
 ```
 
 The pod turns Ready only once the model is downloaded, compiled and loaded, because the server binds its port
@@ -68,9 +68,13 @@ port only, and `networkPolicy.ingressFrom` narrows it to the peers you list, you
 
 ## GPUs
 
-The chart carries the values a GPU deployment needs (`gpu.enabled`, `model.backend: hip`) and refuses them while the
-only published image is the CPU one: `helm install` fails with one sentence saying the ROCm image is not published
-yet. They render only with `image.gpu: true`, your own statement that the image you named carries a GPU lane.
+The image is the same for every backend and carries no GPU library; the node supplies the GPU's.
+`model.backend: nvidia` with `gpu.enabled: true` and `gpu.resource: nvidia.com/gpu` runs on a node whose NVIDIA
+container toolkit injects the driver library. `model.backend: hip` with `gpu.enabled: true` needs
+`gpu.rocm.hostPath`, the node's ROCm prefix (ROCm installed on the node), which the chart mounts read-only. A wrong
+combination fails `helm install` with one sentence naming it; the
+[chart's README](https://github.com/caldrix-ai/helm-charts/blob/main/charts/caldrix/README.md#the-gpu-rule) has the rule.
+Neither GPU path has run in a container yet.
 
 ## What the chart does not do
 
@@ -79,6 +83,6 @@ PodDisruptionBudget, no CRDs, no operator, and no model pre-pull job.
 
 ## Verified
 
-Verified: installed with kind in a virtual machine, at the desk and on the release runner, on the CPU image
-`ghcr.io/caldrix-ai/caldrix:0.2.0-cpu` with the default model; each time `helm test` passed and one chat request
-answered. Not yet run on a cluster of any other kind, and not on any GPU.
+Verified: chart 0.2.0 installed with kind in a virtual machine on the release runner, on the image
+`ghcr.io/caldrix-ai/caldrix:0.3.0` with the default model; `helm test` passed and one chat request answered. Not yet
+run on a cluster of any other kind, and not on any GPU.
