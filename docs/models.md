@@ -12,8 +12,8 @@ only) in safetensors, bf16, f32 or f16, and SmolVLM's vision-language architectu
 stand-in, which makes no hardware claim. Quantized Ollama tags (Q4_K_M and
 Q8_0) run on the `metal` lane and, at the desk, on the `cpu` lane (`x86-64-v3`); on the `hip` lane five
 tags were token-exact in f32 on one MI300X ([Ollama tags](#ollama-tags)). Mistral is accepted
-by the import but has not been verified on hardware. NemotronH (`NemotronHForCausalLM`) runs on the `cpu` lane
-only, from a dense checkpoint at the f32 plan, an MLX one or a GGUF file in the kinds its records hold ([What the import refuses](#what-the-import-refuses)). FLUX.2 klein 4B, an image pipeline, makes images
+by the import but has not been verified on hardware. NemotronH (`NemotronHForCausalLM`) runs on the `cpu` lane,
+from a dense checkpoint at the f32 plan, an MLX one or a GGUF file in the kinds its records hold, and in the browser on the wasm tier from a GGUF file only ([What the import refuses](#what-the-import-refuses)). FLUX.2 klein 4B, an image pipeline, makes images
 from a prompt on the `cpu` and `metal` lanes ([Image pipelines](#image-pipelines)).
 
 ## Aliases
@@ -357,7 +357,7 @@ Every other architecture is refused by name. Within those, the import refuses:
   and on the WebGPU tier on a software adapter, a CPU, and that is all a browser has run — no published
   conversion has been loaded in a browser and no device has run one. Every other lane, quantizing them, an
   adapter over them and speculative decoding refuse them by name;
-- NemotronH (`NemotronHForCausalLM`) anywhere but the `cpu` lane: it runs there only, from a dense checkpoint
+- NemotronH (`NemotronHForCausalLM`) anywhere but the `cpu` lane and the browser's wasm tier: it runs on the `cpu` lane from a dense checkpoint
   at the f32 plan, a desk reading and not a hardware run (`caldrix run --backend cpu` gave the reference's 16
   greedy tokens on one prompt for `Nemotron-3.5-Lightning-0.9B-A0.8B-small`, which has experts, and for
   `NVIDIA-Nemotron-3-Nano-4B-BF16`). An MLX checkpoint of it runs there too, kept compressed where a `cpu`
@@ -400,10 +400,20 @@ Every other architecture is refused by name. Within those, the import refuses:
   holds one),
   with a per-tensor scale (the NVFP4 GGUFs), latent expert tensors, grouped routing without
   its used count, a multi-token-prediction block or a tied head is refused by name at its header, before any
-  download, and the browser refuses both architecture names by name. `--dtype bf16` is refused by name at load
+  download. `--dtype bf16` is refused by name at load
   (at the header for a GGUF file), and `--weight-budget` (a streamed load, which NemotronH does not take in any
-  format) by name before any load or download. Every other lane, quantizing it and the browser refuse it
-  by name, whatever its format, and a Hub download for another lane stops before any weight file.
+  format) by name before any load or download. Every other lane and quantizing it refuse it by name, whatever
+  its format, and a Hub download for another lane stops before any weight file.
+  In the browser (caldrix.js) it runs on the wasm tier from a GGUF file alone, at the f32 plan: its matmuls in
+  their stored kind where that tier reads it, its expert stacks decoded to f32 as they fill (in any of `Q8_0`,
+  `Q5_0`, `Q4_K`, `Q6_K`, `Q5_1`, `Q5_K`, `IQ4_NL`, `Q3_K`, `Q4_0`, `Q4_1` and `MXFP4`), a matmul or embedding in
+  another kind refused by name at the header, before any weight byte, as is a file past the tier's memory. Two
+  files have run there, once, in headless Chromium on a CPU: `Nemotron-3.5-Lightning-0.9B-A0.8B-small` converted
+  to `Q8_0` at the desk and `NVIDIA-Nemotron-3-Nano-4B`'s published `Q4_K_M` file, each giving the reference's 16
+  greedy tokens (the browser-gate record, entry 106); no other file and no device
+  has run it. The browser refuses by name a safetensors or MLX checkpoint (it would be expanded whole to f32,
+  past the tier's memory for every real one), an all-F32 GGUF file, and NemotronH on the WebGPU tier in any
+  format.
   The `metal` lane has NemotronH's kernels and plans every one of its layer kinds at the f32 plan (a quantized
   file's expert stacks expanded to f32 at load), its decode running NemotronH's matrix products through the general
   matrix-multiply path rather than the decode path other models take; that has been checked at the desk on an

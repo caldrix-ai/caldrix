@@ -147,8 +147,17 @@ headless Chromium on a CPU, on that one Q6_K file: its reference's eight tokens,
 default context, which is lowered to fit the browser's memory (the browser-gate record, entry 68). No device, no
 other file and no speed has been measured.
 
-A NemotronH checkpoint (`NemotronHForCausalLM`) is refused by name on both tiers, before its weights are
-downloaded: it runs on the command line's `cpu` lane only (`caldrix run --backend cpu`).
+A NemotronH GGUF file (`general.architecture` `nemotron_h` or `nemotron_h_moe`) loads on the wasm tier by its
+repo id and `file`, at the f32 plan: its matmuls in their stored kind where the tier reads it, its expert stacks
+decoded to f32 as they fill. The precheck judges it from the header range before any weight byte, refusing by name a
+kind the tier does not read and a file past its memory. The WebGPU tier refuses NemotronH by name, whatever the
+format (`NemotronH on the WebGPU tier: pending its kernels`), and `backend: "auto"` then loads it on the wasm tier;
+a safetensors or MLX NemotronH checkpoint is refused on the wasm tier by name with the f32 bytes it would expand to,
+naming the GGUF route. Checked once, in headless Chromium on a CPU, on two files: the Lightning model with experts
+converted to `Q8_0` at the desk, and Nano-4B's published `Q4_K_M` file, each giving its reference's 16 tokens at a
+64-row context and at the default context, and a later request over the prompt extended by two ids equal to a fresh
+load's (the browser-gate record, entry 106; the reuse of the prompt's rows, read from `usage.cachedTokens`, was observed
+on the Lightning file and a tiny one, not on Nano-4B's). No device, no other file and no speed has been measured.
 
 `smolvlm-256m` (SmolVLM-256M-Instruct, a vision-language model) runs in the browser on both tiers:
 `chat` takes images as well as text, and `backend: "auto"` no longer falls back to the wasm tier for it.
